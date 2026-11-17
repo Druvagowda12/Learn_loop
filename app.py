@@ -47,8 +47,30 @@ if not _secret_key:
         print("WARNING: SECRET_KEY not set. Using a temporary random key (sessions will reset on restart). Set SECRET_KEY in your .env file.")
 
 app.config['SECRET_KEY'] = _secret_key
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///learnloop.db')
+
+# --- Database Configuration (Neon Cloud PostgreSQL / SQLite Fallback) ---
+_raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///learnloop.db')
+
+# Testing isolation: always use in-memory SQLite for test runs
+if os.environ.get('TESTING') == '1':
+    _db_url = 'sqlite:///:memory:'
+else:
+    # Normalize postgres:// to postgresql:// for SQLAlchemy 1.4+ compatibility
+    if _raw_db_url.startswith('postgres://'):
+        _db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
+    else:
+        _db_url = _raw_db_url
+
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Neon serverless PostgreSQL engine options:
+# - pool_pre_ping: validates connections before use; cleanly handles Neon idle/wake-up
+# - pool_recycle: recycles connections after 5 minutes to prevent stale dropped sockets
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 
 db.init_app(app)
 
