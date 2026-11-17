@@ -8,8 +8,12 @@ College Mini Project (VTU Belagavi, 2026-27).
 import os
 import random
 import json
+import sys
 from datetime import datetime, timezone
 from functools import wraps
+
+from dotenv import load_dotenv
+load_dotenv()  # Load variables from .env into os.environ (no-op if file absent)
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -31,7 +35,18 @@ from chatbot import answer_query
 from seed import seed_database
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'learnloop-vtu-ece-2026-secret-key-dev')
+
+_secret_key = os.environ.get('SECRET_KEY')
+if not _secret_key:
+    if os.environ.get('FLASK_ENV') == 'production':
+        print("ERROR: SECRET_KEY environment variable is not set. Refusing to start in production.", file=sys.stderr)
+        sys.exit(1)
+    else:
+        import secrets
+        _secret_key = secrets.token_hex(32)
+        print("WARNING: SECRET_KEY not set. Using a temporary random key (sessions will reset on restart). Set SECRET_KEY in your .env file.")
+
+app.config['SECRET_KEY'] = _secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///learnloop.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

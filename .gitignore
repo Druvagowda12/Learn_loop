@@ -1,31 +1,54 @@
-# Virtual Environment
+# ============================================================
+# LearnLoop .gitignore
+# ============================================================
+
+# ----- Secrets (NEVER commit these) -----
+.env
+.env.*
+!.env.example
+
+# ----- Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# ----- Virtual Environments -----
 .venv/
 venv/
 ENV/
 env/
 
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# ----- Databases (runtime data — not source code) -----
+*.db
+*.sqlite3
+instance/
 
-# Pytest / Coverage
+# ----- Pytest / Coverage -----
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
+*.xml
 
-# Local databases & logs
-*.db
-*.sqlite3
-instance/*.db
-!instance/.gitkeep
+# ----- Distribution / Build -----
+dist/
+build/
+*.egg-info/
+.eggs/
 
-# IDE / Editor configs
+# ----- Node (not used, but block accidental commits) -----
+node_modules/
+
+# ----- Logs -----
+*.log
+logs/
+
+# ----- OS / IDE metadata -----
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS generated
-.DS_Store
-Thumbs.db
