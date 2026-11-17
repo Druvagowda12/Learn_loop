@@ -945,6 +945,8 @@ def internal_server_error(e):
 
 
 if __name__ == '__main__':
-    # Local dev server
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    # Run development server only when executed directly (never during gunicorn/WSGI deployment)
+    port = int(os.environ.get('PORT', 5000))
+    debug_mode = os.environ.get('FLASK_DEBUG', '0').lower() in ('1', 'true', 't')
+    app.run(host='0.0.0.0' if os.environ.get('PORT') else '127.0.0.1', port=port, debug=debug_mode)
 
