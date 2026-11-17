@@ -1,0 +1,146 @@
+[
+  {
+    "id": "quiz_taking",
+    "keywords": ["quiz", "test", "exam", "take quiz", "start quiz", "questions", "mcq", "क्विज", "परीक्षा", "सवाल", "ಕ್ವಿಜ್", "ಪರೀಕ್ಷೆ", "ಪ್ರಶ್ನೆ"],
+    "answer": {
+      "en": "To take a quiz, go to 'Topics & Quizzes', choose your subject (e.g., C Programming or Digital Electronics), and click 'Start Quiz'. You will receive 5 adaptive questions with instant explanations.",
+      "hi": "क्विज शुरू करने के लिए, 'Topics & Quizzes' पर जाएं, अपना विषय चुनें और 'Start Quiz' पर क्लिक करें। आपको 5 अनुकूली बहुविकल्पीय प्रश्न और तुरंत व्याख्या मिलेगी।",
+      "kn": "ಕ್ವಿಜ್ ತೆಗೆದುಕೊಳ್ಳಲು, 'Topics & Quizzes' ಪುಟಕ್ಕೆ ಹೋಗಿ, ನಿಮ್ಮ ವಿಷಯವನ್ನು ಆಯ್ಕೆಮಾಡಿ 'Start Quiz' ಕ್ಲಿಕ್ ಮಾಡಿ. ನಿಮಗೆ 5 ಹೊಂದಾಣಿಕೆಯ ಪ್ರಶ್ನೆಗಳು ಮತ್ತು ವಿವರಣೆಗಳು ದೊರೆಯುತ್ತವೆ."
+    }
+  },
+  {
+    "id": "recommendations_work",
+    "keywords": ["recommendation", "recommend", "how it works", "adaptive", "rule", "algorithm", "सिफारिश", "काम", "ಶಿಫಾರಸು", "ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ"],
+    "answer": {
+      "en": "Learnloop uses a rule-based adaptation engine. Based on your recent scores, it identifies if you need foundational notes (<40%), worked examples (40-74%), or advanced practice questions (>=75%).",
+      "hi": "Learnloop नियम-आधारित अनुकूलन इंजन का उपयोग करता है। आपके हालिया अंकों के आधार पर, यह बुनियादी नोट्स (<40%), उदाहरण (40-74%), या कठिन अभ्यास (>=75%) की सिफारिश करता है।",
+      "kn": "Learnloop ನಿಯಮ-ಆಧಾರಿತ ಹೊಂದಾಣಿಕೆ ಎಂಜಿನ್ ಬಳಸುತ್ತದೆ. ನಿಮ್ಮ ಅಂಕಗಳ ಆಧಾರದ ಮೇಲೆ, ಇದು ಮೂಲಭೂತ ನೋಟ್ಸ್ (<40%), ಉದಾಹರಣೆಗಳು (40-74%) ಅಥವಾ ಮುಂದುವರಿದ ಅಭ್ಯಾಸ ಪ್ರಶ್ನೆಗಳನ್ನು (>=75%) ಶಿಫಾರಸು ಮಾಡುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "mastery_levels",
+    "keywords": ["mastery", "levels", "bands", "low", "medium", "high", "percentage", "स्तर", "ಬ್ಯಾಂಡ್", "ಹಂತಗಳು", "ಅಂಕಗಳು"],
+    "answer": {
+      "en": "Mastery has 3 bands: Low (<40% - requires core review), Medium (40-74% - needs applied problem practice), and High (>=75% - ready for advanced topics). Mastery is calculated from your last 3 attempts with recency weighting.",
+      "hi": "दक्षता (Mastery) के 3 स्तर हैं: Low (<40%), Medium (40-74%), और High (>=75%)। यह आपके अंतिम 3 प्रयासों के भारित औसत से निर्धारित होता है।",
+      "kn": "ಪ್ರಾವೀಣ್ಯತೆಯ 3 ಹಂತಗಳಿವೆ: ಕಡಿಮೆ Low (<40%), ಮಧ್ಯಮ Medium (40-74%), ಮತ್ತು ಹೆಚ್ಚಿನ High (>=75%). ಇದು ನಿಮ್ಮ ಕೊನೆಯ 3 ಪ್ರಯತ್ನಗಳ ಸರಾಸರಿಯಿಂದ ಲೆಕ್ಕಹಾಕಲ್ಪಡುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "retrying_quiz",
+    "keywords": ["retry", "retake", "again", "repeat", "improve", "फिर से", "ಮತ್ತೆ", "ಪುನರಾವರ್ತನೆ"],
+    "answer": {
+      "en": "Yes! You can retry any quiz at any time. We recommend reviewing the suggested notes or worked examples before retrying to improve your topic mastery.",
+      "hi": "हाँ! आप किसी भी समय फिर से क्विज दे सकते हैं। दोबारा प्रयास करने से पहले सुझाए गए नोट्स या उदाहरणों की समीक्षा करना बेहतर होगा।",
+      "kn": "ಹೌದು! ನೀವು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಮತ್ತೆ ಕ್ವಿಜ್ ತೆಗೆದುಕೊಳ್ಳಬಹುದು. ಮರುಪ್ರಯತ್ನಿಸುವ ಮೊದಲು ಸೂಚಿಸಲಾದ ನೋಟ್ಸ್ ಅಥವಾ ಉದಾಹರಣೆಗಳನ್ನು ಓದಲು ಸಲಹೆ ನೀಡುತ್ತೇವೆ."
+    }
+  },
+  {
+    "id": "dashboard_analytics",
+    "keywords": ["dashboard", "progress", "chart", "graph", "analytics", "score", "डैशबोर्ड", "प्रगति", "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", "ಪ್ರಗತಿ", "ಚಾರ್ಟ್"],
+    "answer": {
+      "en": "Your Student Dashboard displays total completed topics, average score, a mastery bar chart across subjects, a chronological score trend line, and categorized strengths and gaps.",
+      "hi": "आपका डैशबोर्ड कुल पूर्ण विषय, औसत अंक, विषयवार बार चार्ट, प्रगति रेखा (trend line), और आपकी मजबूतियों व कमजोरियों को दिखाता है।",
+      "kn": "ನಿಮ್ಮ ವಿದ್ಯಾರ್ಥಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಒಟ್ಟು ಪೂರ್ಣಗೊಂಡ ವಿಷಯಗಳು, ಸರಾಸರಿ ಅಂಕ, ಬಾರ್ ಚಾರ್ಟ್, ಪ್ರಗತಿ ರೇಖೆ ಮತ್ತು ನಿಮ್ಮ ಸಾಮರ್ಥ್ಯ ಹಾಗೂ ಸುಧಾರಣೆಯ ವಿಷಯಗಳನ್ನು ತೋರಿಸುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "resource_finding",
+    "keywords": ["resource", "notes", "video", "practice", "example", "material", "study", "संसाधन", "सामग्री", "ಸಂಪನ್ಮೂಲ", "ನೋಟ್ಸ್", "ವಿಡಿಯೋ"],
+    "answer": {
+      "en": "Visit the 'Repository' tab to access structured lecture notes, curated video search links, worked numerical examples, and practice problem sets filtered by subject and topic.",
+      "hi": "'Repository' टैब में जाएं जहाँ आपको विषयवार नोट्स, उपयोगी वीडियो लिंक, हल किए गए उदाहरण और अभ्यास प्रश्न मिलेंगे।",
+      "kn": "'Repository' ಟ್ಯಾಬ್‌ಗೆ ಭೇಟಿ ನೀಡಿ ವಿಷಯವಾರು ವಿವರವಾದ ನೋಟ್ಸ್, ವೀಡಿಯೊ ಲಿಂಕ್‌ಗಳು, ಬಿಡಿಸಿದ ಉದಾಹರಣೆಗಳು ಮತ್ತು ಅಭ್ಯಾಸ ಪ್ರಶ್ನೆಗಳನ್ನು ಪಡೆಯಿರಿ."
+    }
+  },
+  {
+    "id": "privacy_data",
+    "keywords": ["privacy", "data", "security", "consent", "confidential", "गोपनीयता", "डेटा", "ಗೌಪ್ಯತೆ", "ಡೇಟಾ"],
+    "answer": {
+      "en": "Learnloop prioritizes privacy: we only store necessary learning records (quiz attempts and resource views). Passwords are securely hashed, queries are anonymized, and students only view their own performance.",
+      "hi": "Learnloop आपकी गोपनीयता का सम्मान करता है। हम केवल अध्ययन रिकॉर्ड सुरक्षित रखते हैं। पासवर्ड एन्क्रिप्टेड हैं और कोई भी व्यक्तिगत डेटा साझा नहीं किया जाता।",
+      "kn": "Learnloop ಗೌಪ್ಯತೆಗೆ ಆದ್ಯತೆ ನೀಡುತ್ತದೆ. ನಾವು ಕೇವಲ ಅಗತ್ಯ ಕಲಿಕೆಯ ದಾಖಲೆಗಳನ್ನು ಮಾತ್ರ ಸಂಗ್ರಹಿಸುತ್ತೇವೆ. ಪಾಸ್‌ವರ್ಡ್‌ಗಳು ಸುರಕ್ಷಿತವಾಗಿವೆ ಮತ್ತು ಡೇಟಾ ಖಾಸಗಿಯಾಗಿರುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "team_about",
+    "keywords": ["team", "who built", "authors", "college", "vtu", "guide", "project", "टीम", "कॉलेज", "ತಂಡ", "ಯಾರು ಮಾಡಿದ್ದು", "ಕಾಲೇಜು"],
+    "answer": {
+      "en": "Learnloop was developed by 8th Sem ECE students at Government Engineering College, Mosalehosahalli (VTU Belagavi): Adithya K B, Druva, G M Kavya, and Thanusha C P, under the guidance of Prof. Shruthi K. N.",
+      "hi": "Learnloop को गवर्नमेंट इंजीनियरिंग कॉलेज, मोसलेहोसहल्ली (VTU) के ECE छात्रों - आदित्य के बी, ध्रुव, जी एम काव्या और तनुषा सी पी ने प्रो. श्रुति के. एन. के मार्गदर्शन में बनाया है।",
+      "kn": "Learnloop ಅನ್ನು ಸರ್ಕಾರಿ ಇಂಜಿನಿಯರಿಂಗ್ ಕಾಲೇಜು, ಮೊಸಳೆಹೊಸಹಳ್ಳಿ (VTU) ಇಸಿಇ ವಿಭಾಗದ ವಿದ್ಯಾರ್ಥಿಗಳಾದ ಆದಿತ್ಯ ಕೆ ಬಿ, ಧ್ರುವ, ಜಿ ಎಂ ಕಾವ್ಯ ಮತ್ತು ತನುಷಾ ಸಿ ಪಿ ಅವರು ಪ್ರೊ. ಶ್ರುತಿ ಕೆ. ಎನ್. ಅವರ ಮಾರ್ಗದರ್ಶನದಲ್ಲಿ ಅಭಿವೃದ್ಧಿಪಡಿಸಿದ್ದಾರೆ."
+    }
+  },
+  {
+    "id": "concept_pointer",
+    "keywords": ["pointer", "pointers", "address", "memory", "dereference", "point", "पॉइंटर", "मेमोरी", "ಪಾಯಿಂಟರ್", "ಮೆಮೊರಿ"],
+    "answer": {
+      "en": "In C programming, a pointer is a variable that stores the memory address of another variable. Use '&' to obtain an address and '*' to dereference and access the stored value.",
+      "hi": "सी प्रोग्रामिंग में, पॉइंटर एक ऐसा वेरिएबल है जो दूसरे वेरिएबल का मेमोरी एड्रेस स्टोर करता है। एड्रेस प्राप्त करने के लिए '&' और मान पढ़ने के लिए '*' का उपयोग होता है।",
+      "kn": "ಸಿ ಪ್ರೋಗ್ರಾಮಿಂಗ್‌ನಲ್ಲಿ, ಪಾಯಿಂಟರ್ ಎನ್ನುವುದು ಮತ್ತೊಂದು ವೇರಿಯೇಬಲ್‌ನ ಮೆಮೊರಿ ವಿಳಾಸವನ್ನು ಸಂಗ್ರಹಿಸುವ ವೇರಿಯೇಬಲ್ ಆಗಿದೆ. ವಿಳಾಸ ಪಡೆಯಲು '&' ಮತ್ತು ಮೌಲ್ಯ ಪ್ರವೇಶಿಸಲು '*' ಬಳಸಿ."
+    }
+  },
+  {
+    "id": "concept_logic_gate",
+    "keywords": ["logic gate", "gates", "and gate", "or gate", "nand", "nor", "xor", "लॉजिक गेट", "ಲಾಜಿಕ್ ಗೇಟ್"],
+    "answer": {
+      "en": "Logic gates are foundational digital circuits implementing Boolean operations. AND outputs 1 only when all inputs are 1; OR outputs 1 if any input is 1; NOT inverts the input.",
+      "hi": "लॉजिक गेट डिजिटल सर्किट के मूल घटक हैं। AND गेट केवल तभी 1 देता है जब सभी इनपुट 1 हों; OR गेट 1 देता है यदि कोई भी इनपुट 1 हो; NOT इनपुट को उलट देता है।",
+      "kn": "ಲಾಜಿಕ್ ಗೇಟ್‌ಗಳು ಡಿಜಿಟಲ್ ಸರ್ಕ್ಯೂಟ್‌ಗಳ ಮೂಲ ಬಿಲ್ಡಿಂಗ್ ಬ್ಲಾಕ್ಸ್ ಆಗಿವೆ. AND ಗೇಟ್ ಎಲ್ಲಾ ಇನ್‌ಪುಟ್‌ಗಳು 1 ಇದ್ದಾಗ ಮಾತ್ರ 1 ನೀಡುತ್ತದೆ; OR ಗೇಟ್ ಯಾವುದೇ ಇನ್‌ಪುಟ್ 1 ಇದ್ದರೂ 1 ನೀಡುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "concept_ohms_law",
+    "keywords": ["ohm", "ohms law", "voltage", "current", "resistance", "v=ir", "ओम का नियम", "ಓಮ್ ನಿಯಮ"],
+    "answer": {
+      "en": "Ohm's Law states that current (I) through a conductor between two points is directly proportional to voltage (V) and inversely proportional to resistance (R): V = I * R.",
+      "hi": "ओम का नियम कहता है कि किसी चालक में बहने वाली धारा (I) उस पर लगाए गए विभवांतर (V) के समानुपाती और प्रतिरोध (R) के व्युत्क्रमानुपाती होती है: V = I * R।",
+      "kn": "ಓಮ್ ನಿಯಮದ ಪ್ರಕಾರ ಎರಡು ಬಿಂದುಗಳ ನಡುವಿನ ಕರೆಂಟ್ (I) ವೋಲ್ಟೇಜ್‌ಗೆ (V) ನೇರ ಅನುಪಾತದಲ್ಲಿ ಮತ್ತು ರೋಧಕ್ಕೆ (R) ವಿಲೋಮ ಅನುಪಾತದಲ್ಲಿರುತ್ತದೆ: V = I * R."
+    }
+  },
+  {
+    "id": "concept_matrix_eigen",
+    "keywords": ["matrix", "matrices", "eigenvalue", "eigenvalues", "eigenvector", "मैट्रिक्स", "ಮ್ಯಾಟ್ರಿಕ್ಸ್"],
+    "answer": {
+      "en": "For a square matrix A, a scalar λ is an eigenvalue and vector v is the eigenvector if A*v = λ*v. Find eigenvalues by solving the characteristic equation det(A - λI) = 0.",
+      "hi": "वर्ग मैट्रिक्स A के लिए, यदि A*v = λ*v हो तो λ को आइगेनवैल्यू और v को आइगेनवेक्टर कहते हैं। इसे अभिलक्षणिक समीकरण det(A - λI) = 0 से ज्ञात किया जाता है।",
+      "kn": "ಚೌಕ ಮ್ಯಾಟ್ರಿಕ್ಸ್ A ಗಾಗಿ, A*v = λ*v ಆದರೆ λ ಎಂಬುದು ಐಗೆನ್‌ವ್ಯಾಲ್ಯೂ ಮತ್ತು v ಎಂಬುದು ಐಗೆನ್‌ವೆಕ್ಟರ್ ಆಗಿದೆ. ಇದನ್ನು det(A - λI) = 0 ಸಮೀಕರಣದಿಂದ ಕಂಡುಹಿಡಿಯಲಾಗುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "teacher_role",
+    "keywords": ["teacher", "instructor", "faculty", "replace teacher", "oversight", "अध्यापक", "शिक्षक", "ಶಿಕ್ಷಕರು", "ಉಪನ್ಯಾಸಕರು"],
+    "answer": {
+      "en": "Learnloop is designed to assist teachers, never to replace them! It provides educators with aggregate insights on class learning gaps while leaving all academic and grading decisions to teachers.",
+      "hi": "Learnloop शिक्षकों की सहायता के लिए है, उन्हें बदलने के लिए नहीं। यह शिक्षकों को कक्षा के प्रदर्शन की जानकारी देता है और सभी शैक्षणिक निर्णय शिक्षकों के हाथ में रहते हैं।",
+      "kn": "Learnloop ಶಿಕ್ಷಕರಿಗೆ ನೆರವಾಗಲು ವಿನ್ಯಾಸಗೊಳಿಸಲಾಗಿದೆ, ಅವರ ಸ್ಥಾನವನ್ನು ತುಂಬಲು ಅಲ್ಲ. ಇದು ತರಗತಿಯ ಕಲಿಕಾ ಪ್ರಗತಿಯನ್ನು ಶಿಕ್ಷಕರಿಗೆ ತೋರಿಸುತ್ತದೆ, ಆದರೆ ಶೈಕ್ಷಣಿಕ ನಿರ್ಧಾರಗಳು ಸಂಪೂರ್ಣವಾಗಿ ಶಿಕ್ಷಕರದ್ದೇ ಆಗಿರುತ್ತವೆ."
+    }
+  },
+  {
+    "id": "low_score_reassurance",
+    "keywords": ["low score", "failed", "poor score", "bad marks", "कम अंक", "ಫೇಲ್", "ಕಡಿಮೆ ಅಂಕ"],
+    "answer": {
+      "en": "Don't worry! A low score on a diagnostic quiz is simply an indicator of which concepts to review first. It does not reflect your intelligence. Open the recommended notes, try the examples, and retry!",
+      "hi": "चिंता न करें! कम अंक केवल यह दर्शाते हैं कि किन विषयों का पहले अभ्यास करना चाहिए। यह आपकी क्षमता की सीमा नहीं है। सुझाए गए नोट्स पढ़ें और दोबारा प्रयास करें!",
+      "kn": "ಚಿಂತಿಸಬೇಡಿ! ಕಡಿಮೆ ಅಂಕಗಳು ಕೇವಲ ಯಾವ ವಿಷಯವನ್ನು ಮೊದಲು ಓದಬೇಕೆಂದು ತಿಳಿಸುತ್ತವೆ. ಶಿಫಾರಸು ಮಾಡಿದ ನೋಟ್ಸ್ ಓದಿ, ಉದಾಹರಣೆಗಳನ್ನು ಅಭ್ಯಾಸ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ!"
+    }
+  },
+  {
+    "id": "difficulty_adjustment",
+    "keywords": ["difficulty", "harder", "easier", "adjust", "adaptive difficulty", "कठिनाई", "ಹೊಂದಾಣಿಕೆ", "ಕಷ್ಟ"],
+    "answer": {
+      "en": "The engine dynamically shifts questions: scoring >=80% introduces more challenging medium and hard questions, while scoring <40% shifts focus back to foundational easy questions.",
+      "hi": "इंजन गतिशील रूप से प्रश्न स्तर बदलता है: 80% से अधिक अंक लाने पर कठिन प्रश्न आते हैं, और 40% से कम अंक आने पर बुनियादी और सरल प्रश्न दिए जाते हैं।",
+      "kn": "ಎಂಜಿನ್ ಕ್ರಿಯಾತ್ಮಕವಾಗಿ ಪ್ರಶ್ನೆಯ ಕಠಿಣತೆಯನ್ನು ಬದಲಾಯಿಸುತ್ತದೆ: 80% ಕ್ಕಿಂತ ಹೆಚ್ಚು ಗಳಿಸಿದರೆ ಕಷ್ಟದ ಪ್ರಶ್ನೆಗಳು ಬರುತ್ತವೆ, 40% ಕ್ಕಿಂತ ಕಡಿಮೆ ಬಂದರೆ ಸುಲಭದ ಪ್ರಶ್ನೆಗಳನ್ನು ನೀಡುತ್ತದೆ."
+    }
+  },
+  {
+    "id": "how_to_study",
+    "keywords": ["study tips", "how to study", "prepare", "advice", "पढ़ाई कैसे करें", "ಹೇಗೆ ಓದಬೇಕು", "ಅಧ್ಯಯನ"],
+    "answer": {
+      "en": "Follow the Learnloop cycle: 1) Take a 5-question diagnostic quiz, 2) Note the missed subtopics, 3) Study the recommended conceptual summary and worked example, 4) Retry the quiz to track your progress.",
+      "hi": "Learnloop चक्र का पालन करें: 1) 5 प्रश्नों का क्विज दें, 2) छूटे हुए विषयों को समझें, 3) अनुशंसित नोट्स और उदाहरण पढ़ें, 4) अपनी प्रगति देखने के लिए पुनः प्रयास करें।",
+      "kn": "Learnloop ಚಕ್ರವನ್ನು ಅನುಸರಿಸಿ: 1) 5 ಪ್ರಶ್ನೆಗಳ ರೋಗನಿರ್ಣಯ ಕ್ವಿಜ್ ತೆಗೆದುಕೊಳ್ಳಿ, 2) ತಪ್ಪಿದ ವಿಷಯಗಳನ್ನು ಗಮನಿಸಿ, 3) ಶಿಫಾರಸು ಮಾಡಿದ ಸಾರಾಂಶವನ್ನು ಓದಿ, 4) ಪ್ರಗತಿಯನ್ನು ಪರೀಕ್ಷಿಸಲು ಮತ್ತೆ ಕ್ವಿಜ್ ನೀಡಿ."
+    }
+  }
+]

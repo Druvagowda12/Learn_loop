@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In · Learnloop - AI Adaptive Learning Framework{% endblock %}
+
+{% block content %}
+<div class="relative min-h-[calc(100vh-14rem)] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 sm:py-16 overflow-hidden">
+  
+  <!-- Subtle ambient animated background orbs -->
+  <div class="absolute -top-24 -left-24 w-96 h-96 bg-[#1a6b5f]/15 rounded-full blur-3xl pointer-events-none animate-orb-1"></div>
+  <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-[#e8a33d]/15 rounded-full blur-3xl pointer-events-none animate-orb-2"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-5xl w-full mx-auto relative z-10">
+
+    {% if session.get('user_id') and current_user %}
+      <!-- Authenticated User Quick Action Card -->
+      <div class="max-w-xl mx-auto card-learnloop p-8 sm:p-10 bg-white/95 backdrop-blur shadow-xl border-[#e2dacd] text-center animate-fade-up">
+        <div class="w-16 h-16 rounded-2xl bg-[#10222c] text-[#e8a33d] flex items-center justify-center mx-auto mb-4 shadow-md">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+        
+        <span class="eyebrow" data-i18n="session_active">{{ _('session_active') }}</span>
+        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1 mb-2">
+          <span data-i18n="welcome_back">{{ _('welcome_back') }}</span>, {{ current_user.name }}!
+        </h1>
+        <p class="text-xs sm:text-sm text-[#6b7a82] mb-6">
+          <span data-i18n="signed_in_as">{{ _('signed_in_as') }}</span> <span class="font-semibold text-[#1a6b5f] capitalize">{{ current_user.role }}</span>.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+          {% if current_user.role == 'teacher' %}
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn-primary text-sm font-bold px-6 py-3 shadow-md" data-i18n="go_to_teacher">
+              {{ _('go_to_teacher') }}
+            </a>
+          {% else %}
+            <a href="{{ url_for('dashboard') }}" class="btn-primary text-sm font-bold px-6 py-3 shadow-md" data-i18n="go_to_dashboard">
+              {{ _('go_to_dashboard') }}
+            </a>
+          {% endif %}
+          <a href="{{ url_for('topics') }}" class="btn-teal text-sm font-semibold px-6 py-3 shadow-md" data-i18n="browse_topics">
+            {{ _('browse_topics') }}
+          </a>
+        </div>
+
+        <div class="pt-5 border-t border-[#ede6da] text-xs text-gray-500">
+          <span data-i18n="switch_account">{{ _('switch_account') }}</span> 
+          <a href="{{ url_for('logout') }}" class="font-semibold text-red-600 hover:underline ml-1" data-i18n="sign_out">
+            {{ _('sign_out') }}
+          </a>
+        </div>
+      </div>
+
+    {% else %}
+      <!-- Main Split Login Container -->
+      <div class="card-learnloop overflow-hidden bg-white/95 backdrop-blur shadow-2xl border-[#e2dacd] grid grid-cols-1 lg:grid-cols-12 animate-fade-up">
+        
+        <!-- Left Column: Modern Branding & Highlights -->
+        <div class="lg:col-span-5 bg-gradient-to-br from-[#10222c] via-[#142d3a] to-[#0a161d] text-white p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden">
+          <!-- Subtle Glow Inside Panel -->
+          <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-[#e8a33d]/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -left-20 -top-20 w-64 h-64 bg-[#1a6b5f]/20 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="relative z-10">
+            <!-- Project Tag -->
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold text-emerald-300 tracking-wider uppercase mb-6 animate-fade-scale">
+              <span class="w-2 h-2 rounded-full bg-[#e8a33d] pulse-dot-amber"></span>
+              <span data-i18n="brand_tagline">{{ _('brand_tagline') }}</span>
+            </div>
+
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-11 h-11 rounded-xl bg-[#e8a33d] flex items-center justify-center text-[#10222c] font-bold shadow-md">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+              <div>
+                <h1 class="font-serif text-2xl font-bold tracking-tight text-white" data-i18n="brand_name">Learnloop</h1>
+                <p class="text-[11px] text-gray-300" data-i18n="brand_subtitle">{{ _('brand_subtitle') }}</p>
+              </div>
+            </div>
+
+            <p class="text-sm text-gray-300 leading-relaxed mt-4">
+              A personalized, data-driven learning support system designed to pinpoint topic gaps, adapt quiz difficulty, and curate targeted study materials.
+            </p>
+
+            <!-- Key Highlights List -->
+            <div class="mt-8 space-y-4">
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 transition-transform hover:translate-x-1">
+                <div class="w-8 h-8 rounded-lg bg-[#e8a33d]/20 text-[#e8a33d] flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xs font-semibold text-white" data-i18n="adaptive_quizzes_title">{{ _('adaptive_quizzes_title') }}</h2>
+                  <p class="text-[11px] text-gray-400" data-i18n="adaptive_quizzes_desc">{{ _('adaptive_quizzes_desc') }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 transition-transform hover:translate-x-1">
+                <div class="w-8 h-8 rounded-lg bg-emerald-400/20 text-emerald-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xs font-semibold text-white" data-i18n="diagnostic_analytics_title">{{ _('diagnostic_analytics_title') }}</h2>
+                  <p class="text-[11px] text-gray-400" data-i18n="diagnostic_analytics_desc">{{ _('diagnostic_analytics_desc') }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 transition-transform hover:translate-x-1">
+                <div class="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-xs font-semibold text-white" data-i18n="ai_study_buddy_title">{{ _('ai_study_buddy_title') }}</h2>
+                  <p class="text-[11px] text-gray-400" data-i18n="ai_study_buddy_desc">{{ _('ai_study_buddy_desc') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Institutional Credit -->
+          <div class="relative z-10 pt-6 mt-8 border-t border-white/10 text-[10px] text-gray-400">
+            Dept. of ECE · Government Engineering College, Mosalehosahalli (VTU Belagavi)
+          </div>
+        </div>
+
+        <!-- Right Column: Clean & Clear Login Interface -->
+        <div class="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center bg-[#fffdf8]">
+          
+          <div class="mb-6">
+            <span class="eyebrow" data-i18n="student_faculty_login">{{ _('student_faculty_login') }}</span>
+            <h2 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1" data-i18n="sign_in_btn">{{ _('sign_in_btn') }}</h2>
+            <p class="text-xs sm:text-sm text-[#6b7a82] mt-1" data-i18n="login_subtitle">{{ _('login_subtitle') }}</p>
+          </div>
+
+          <!-- Quick Test Demo Accounts Section -->
+          <div class="mb-6 p-4 rounded-xl bg-[#f6f3ed] border border-[#e2dacd] text-xs">
+            <div class="flex items-center justify-between mb-2.5">
+              <span class="font-bold text-[#10222c] flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#1a6b5f]"></span>
+                <span data-i18n="quick_demo_logins">{{ _('quick_demo_logins') }}:</span>
+              </span>
+              <span class="text-[10px] font-mono text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">Pass: learnloop123</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button type="button" 
+                      id="chip-student-1"
+                      onclick="fillDemo('student1@demo.test', 'learnloop123', 'chip-student-1')"
+                      class="demo-chip text-left p-2.5 rounded-lg bg-white border border-gray-300 hover:border-[#1a6b5f] hover:bg-emerald-50/50 transition">
+                <div class="font-bold text-[#10222c] text-xs flex items-center justify-between">
+                  <span><span data-i18n="demo_student">{{ _('demo_student') }}</span> 1</span>
+                  <span class="badge-low text-[9px] px-1.5 py-0.2 rounded font-semibold">Low</span>
+                </div>
+                <div class="text-[10px] text-gray-500 truncate mt-0.5">student1@demo.test</div>
+              </button>
+
+              <button type="button" 
+                      id="chip-student-2"
+                      onclick="fillDemo('student2@demo.test', 'learnloop123', 'chip-student-2')"
+                      class="demo-chip text-left p-2.5 rounded-lg bg-white border border-gray-300 hover:border-[#1a6b5f] hover:bg-emerald-50/50 transition">
+                <div class="font-bold text-[#10222c] text-xs flex items-center justify-between">
+                  <span><span data-i18n="demo_student">{{ _('demo_student') }}</span> 2</span>
+                  <span class="badge-high text-[9px] px-1.5 py-0.2 rounded font-semibold">High</span>
+                </div>
+                <div class="text-[10px] text-gray-500 truncate mt-0.5">student2@demo.test</div>
+              </button>
+
+              <button type="button" 
+                      id="chip-teacher"
+                      onclick="fillDemo('teacher@demo.test', 'learnloop123', 'chip-teacher')"
+                      class="demo-chip text-left p-2.5 rounded-lg bg-white border border-gray-300 hover:border-[#e8a33d] hover:bg-amber-50/50 transition">
+                <div class="font-bold text-[#10222c] text-xs flex items-center justify-between">
+                  <span data-i18n="demo_teacher">{{ _('demo_teacher') }}</span>
+                  <span class="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.2 rounded font-semibold">Faculty</span>
+                </div>
+                <div class="text-[10px] text-gray-500 truncate mt-0.5">teacher@demo.test</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sign In Form -->
+          <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+            
+            <!-- Email Input -->
+            <div>
+              <label for="email" class="block text-xs font-bold text-[#1d2b33] uppercase tracking-wider mb-1.5" data-i18n="email_address">
+                {{ _('email_address') }}
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"/>
+                  </svg>
+                </div>
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       value="{{ request.form.get('email', '') }}"
+                       required 
+                       placeholder="name@college.edu"
+                       class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-[#e2dacd] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent transition-all shadow-sm">
+              </div>
+            </div>
+
+            <!-- Password Input with Show/Hide Toggle -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label for="password" class="block text-xs font-bold text-[#1d2b33] uppercase tracking-wider" data-i18n="password">
+                  {{ _('password') }}
+                </label>
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       required 
+                       placeholder="••••••••"
+                       class="w-full pl-10 pr-11 py-2.5 rounded-xl border border-[#e2dacd] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent transition-all shadow-sm">
+                <button type="button" 
+                        onclick="togglePasswordVisibility()" 
+                        class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                        aria-label="Toggle password visibility">
+                  <svg id="eye-icon-show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg id="eye-icon-hide" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full btn-primary text-sm font-bold py-3 shadow-md mt-2 flex items-center justify-center gap-2 group">
+              <span data-i18n="sign_in_btn">{{ _('sign_in_btn') }}</span>
+              <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Navigation Links -->
+          <div class="mt-6 pt-5 border-t border-[#ede6da] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#6b7a82]">
+            <div>
+              <span data-i18n="new_to_learnloop">{{ _('new_to_learnloop') }}</span> 
+              <a href="{{ url_for('register') }}" class="font-bold text-[#1a6b5f] hover:underline ml-1" data-i18n="create_account">
+                {{ _('create_account') }}
+              </a>
+            </div>
+            <div>
+              <a href="{{ url_for('topics') }}" class="font-semibold text-gray-600 hover:text-[#10222c] transition inline-flex items-center gap-1" data-i18n="browse_topics">
+                {{ _('browse_topics') }} →
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function fillDemo(email, pass, chipId) {
+    const emailField = document.getElementById('email');
+    const passField = document.getElementById('password');
+    if (emailField) emailField.value = email;
+    if (passField) passField.value = pass;
+
+    // Visual feedback for selected chip
+    document.querySelectorAll('.demo-chip').forEach(c => {
+      c.classList.remove('ring-2', 'ring-[#1a6b5f]', 'bg-emerald-50');
+    });
+    const activeChip = document.getElementById(chipId);
+    if (activeChip) {
+      activeChip.classList.add('ring-2', 'ring-[#1a6b5f]', 'bg-emerald-50');
+    }
+
+    // Flash border highlight on fields
+    if (emailField && passField) {
+      emailField.classList.add('ring-2', 'ring-emerald-400');
+      passField.classList.add('ring-2', 'ring-emerald-400');
+      setTimeout(() => {
+        emailField.classList.remove('ring-2', 'ring-emerald-400');
+        passField.classList.remove('ring-2', 'ring-emerald-400');
+      }, 600);
+    }
+  }
+
+  function togglePasswordVisibility() {
+    const passInput = document.getElementById('password');
+    const eyeShow = document.getElementById('eye-icon-show');
+    const eyeHide = document.getElementById('eye-icon-hide');
+    if (!passInput) return;
+
+    if (passInput.type === 'password') {
+      passInput.type = 'text';
+      if (eyeShow) eyeShow.classList.add('hidden');
+      if (eyeHide) eyeHide.classList.remove('hidden');
+    } else {
+      passInput.type === 'password';
+      passInput.type = 'password';
+      if (eyeShow) eyeShow.classList.remove('hidden');
+      if (eyeHide) eyeHide.classList.add('hidden');
+    }
+  }
+</script>
+{% endblock %}

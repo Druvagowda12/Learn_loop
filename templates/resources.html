@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Resource Repository · Learnloop{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <!-- Header Banner -->
+  <div class="mb-8 border-b border-[#e2dacd] pb-6">
+    <span class="eyebrow" data-i18n="vtu_curriculum">{{ _('vtu_curriculum') }}</span>
+    <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#10222c] mt-1" data-i18n="resources_title">{{ _('resources_title') }}</h1>
+    <p class="text-sm text-[#6b7a82] mt-2 max-w-3xl" data-i18n="resources_subtitle">
+      {{ _('resources_subtitle') }}
+    </p>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="card-learnloop p-5 mb-8 bg-[#fffdf8] border-[#e2dacd]">
+    <form method="GET" action="{{ url_for('resources') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Text Search Box -->
+      <div>
+        <label for="search-input" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1" data-i18n="search_keywords">{{ _('search_keywords') }}</label>
+        <input type="text" 
+               id="search-input" 
+               name="q" 
+               value="{{ search_q or '' }}" 
+               placeholder="{{ _('search_placeholder') }}" 
+               data-i18n="search_placeholder"
+               class="w-full text-xs px-3 py-2 rounded-lg border border-[#e2dacd] focus:outline-none focus:ring-2 focus:ring-[#1a6b5f]">
+      </div>
+
+      <!-- Subject Filter -->
+      <div>
+        <label for="filter-subject" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1" data-i18n="filter_subject_label">{{ _('filter_subject_label') }}</label>
+        <select id="filter-subject" name="subject_id" class="w-full text-xs px-3 py-2 rounded-lg border border-[#e2dacd] focus:outline-none focus:ring-2 focus:ring-[#1a6b5f]">
+          <option value="" data-i18n="filter_all">{{ _('filter_all') }}</option>
+          {% for sub in subjects %}
+            <option value="{{ sub.id }}" {% if selected_sub == sub.id %}selected{% endif %}>{{ sub.name|localize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Resource Type Filter -->
+      <div>
+        <label for="filter-type" class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1" data-i18n="resource_type_label">{{ _('resource_type_label') }}</label>
+        <select id="filter-type" name="type" class="w-full text-xs px-3 py-2 rounded-lg border border-[#e2dacd] focus:outline-none focus:ring-2 focus:ring-[#1a6b5f]">
+          <option value="" data-i18n="all_types">{{ _('all_types') }}</option>
+          <option value="notes" {% if selected_type == 'notes' %}selected{% endif %} data-i18n="type_notes_opt">{{ _('type_notes_opt') }}</option>
+          <option value="video" {% if selected_type == 'video' %}selected{% endif %} data-i18n="type_video_opt">{{ _('type_video_opt') }}</option>
+          <option value="example" {% if selected_type == 'example' %}selected{% endif %} data-i18n="type_example_opt">{{ _('type_example_opt') }}</option>
+          <option value="practice" {% if selected_type == 'practice' %}selected{% endif %} data-i18n="type_practice_opt">{{ _('type_practice_opt') }}</option>
+        </select>
+      </div>
+
+      <!-- Submit & Reset Actions -->
+      <div class="flex items-end gap-2">
+        <button type="submit" class="btn-primary text-xs font-bold px-4 py-2 flex-1" data-i18n="filter_btn">
+          {{ _('filter_btn') }}
+        </button>
+        <a href="{{ url_for('resources') }}" class="btn-secondary text-xs font-semibold px-3 py-2 text-center" data-i18n="reset_btn">
+          {{ _('reset_btn') }}
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Resource Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for res in resources %}
+      <div class="card-learnloop p-6 flex flex-col justify-between hover:border-[#1a6b5f] transition-all">
+        <div>
+          <!-- Type and Flag Pill -->
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded
+              {% if res.type == 'notes' %}bg-blue-50 text-blue-700 border border-blue-200
+              {% elif res.type == 'video' %}bg-red-50 text-red-700 border border-red-200
+              {% elif res.type == 'example' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+              {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+              {{ res.type|localize }}
+            </span>
+
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-semibold text-gray-500 capitalize bg-gray-100 px-2 py-0.5 rounded">
+                {{ res.difficulty|localize }}
+              </span>
+              {% if res.needs_review %}
+                <span class="text-[9px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" data-i18n="teacher_to_review">
+                  {{ _('teacher_to_review') }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="text-[11px] font-medium text-[#1a6b5f] mb-1">
+            {{ res.topic.subject.name|localize }} • {{ res.topic.name|localize }}
+          </div>
+
+          <h3 class="font-serif font-bold text-base text-[#10222c] mb-2 leading-snug">
+            {{ res.title|localize }}
+          </h3>
+
+          <p class="text-xs text-[#6b7a82] leading-relaxed line-clamp-3 mb-4">
+            {{ res.description|localize }}
+          </p>
+        </div>
+
+        <div class="pt-4 border-t border-[#ede6da]">
+          {% if res.url %}
+            <a href="{{ res.url }}" target="_blank" rel="noopener noreferrer" class="btn-teal text-xs w-full text-center flex items-center justify-center gap-1.5">
+              <span data-i18n="search_youtube_lecture">{{ _('search_youtube_lecture') }}</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          {% else %}
+            <a href="{{ url_for('view_resource', resource_id=res.id) }}" class="btn-secondary text-xs w-full text-center" data-i18n="read_notes_problem">
+              {{ _('read_notes_problem') }}
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    {% else %}
+      <div class="col-span-3 card-learnloop p-12 text-center text-gray-500">
+        <p class="text-base font-serif font-medium">No learning resources matched your filter criteria.</p>
+        <p class="text-xs text-gray-400 mt-1">Try resetting the filters or searching for broader terms.</p>
+        <a href="{{ url_for('resources') }}" class="btn-primary text-xs font-bold inline-block mt-4" data-i18n="view_resources">
+          {{ _('view_resources') }}
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

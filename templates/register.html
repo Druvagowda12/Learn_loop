@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration · Learnloop{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-12">
+
+  <div class="card-learnloop p-6 sm:p-8">
+
+    <div class="text-center mb-6">
+      <span class="eyebrow" data-i18n="brand_subtitle">{{ _('brand_subtitle') }}</span>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1" data-i18n="create_account">{{
+        _('create_account') }}</h1>
+      <p class="text-sm text-[#6b7a82] mt-1" data-i18n="brand_tagline">{{ _('brand_tagline') }}</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form method="POST" action="{{ url_for('register') }}" class="space-y-4">
+
+      <div>
+        <label for="name" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1"
+          data-i18n="full_name">
+          {{ _('full_name') }}
+        </label>
+        <input type="text" id="name" name="name" value="{{ request.form.get('name', '') }}" placeholder="e.g. Druva"
+          required
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+      </div>
+
+      <div>
+        <label for="email" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1"
+          data-i18n="email_address">
+          {{ _('email_address') }}
+        </label>
+        <input type="email" id="email" name="email" value="{{ request.form.get('email', '') }}"
+          placeholder="student@college.edu" required
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+      </div>
+
+      <div>
+        <label for="preferred_language" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1"
+          data-i18n="preferred_assistant_language">
+          {{ _('preferred_assistant_language') }}
+        </label>
+        <select id="preferred_language" name="preferred_language"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+          <option value="kn">ಕನ್ನಡ (Kannada)</option>
+        </select>
+        <p class="text-[11px] text-gray-500 mt-1">Chatbot guidance will default to this language.</p>
+      </div>
+
+      <div>
+        <label for="password" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1"
+          data-i18n="password">
+          {{ _('password') }}
+        </label>
+        <input type="password" id="password" name="password" minlength="6" placeholder="At least 6 characters" required
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+      </div>
+
+      <!-- Privacy and Consent Safeguard Notice -->
+      <div class="p-3.5 rounded-xl bg-[#f6f3ed] border border-[#e2dacd] text-xs text-gray-600 space-y-1.5">
+        <div class="flex items-center gap-1.5 font-semibold text-[#1a6b5f]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span>Privacy & Consent Notice</span>
+        </div>
+        <p class="leading-relaxed">
+          Learnloop stores only necessary learning data (quiz attempts and resource views) to compute adaptive
+          recommendations. Your data is private, never sold, and real-student evaluations require explicit institutional
+          consent.
+        </p>
+        <label class="flex items-start gap-2 pt-1 cursor-pointer">
+          <input type="checkbox" required name="consent" class="mt-0.5 rounded text-[#1a6b5f] focus:ring-[#1a6b5f]">
+          <span class="text-[11px] text-gray-700">I agree to the academic use of my performance data for personalized
+            learning recommendations.</span>
+        </label>
+      </div>
+
+      <button type="submit" class="w-full btn-primary text-sm font-bold py-2.5 mt-2" data-i18n="complete_registration">
+        {{ _('complete_registration') }}
+      </button>
+    </form>
+
+    <div class="mt-6 pt-5 border-t border-[#ede6da] text-center text-xs text-[#6b7a82]">
+      <span data-i18n="already_registered">{{ _('already_registered') }}</span>
+      <a href="{{ url_for('login') }}" class="font-semibold text-[#1a6b5f] hover:underline" data-i18n="sign_in">
+        {{ _('sign_in') }}
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

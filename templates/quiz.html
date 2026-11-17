@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if is_result %}
+Quiz Results & Adaptive Recommendations · {{ topic.name }}
+{% else %}
+Adaptive Quiz · {{ topic.name }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+
+  {% if is_result %}
+  <!-- ================================================================= -->
+  <!-- RESULT & RECOMMENDATION VIEW -->
+  <!-- ================================================================= -->
+  <div class="space-y-8 fade-in">
+
+    <!-- Result Banner Card -->
+    <div
+      class="card-learnloop p-6 sm:p-8 bg-gradient-to-br from-[#fffdf8] to-[#fbf8f1] border-[#d8cebe] relative overflow-hidden">
+
+      <div class="sm:flex sm:items-start sm:justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="eyebrow">{{ topic.subject.name }}</span>
+            <span class="text-gray-300">•</span>
+            <span class="text-xs text-gray-500 font-medium">{{ topic.name }}</span>
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c]">
+            {{ recommendation.action_headline }}
+          </h1>
+
+          <p class="text-sm text-gray-700 mt-2 leading-relaxed max-w-2xl">
+            {{ recommendation.reason }}
+          </p>
+        </div>
+
+        <!-- Score Dial / Pill -->
+        <div class="mt-4 sm:mt-0 flex-shrink-0 text-center bg-[#ede6da] p-4 rounded-2xl border border-[#d8cebe]">
+          <span class="text-xs uppercase tracking-wider text-gray-500 font-semibold block">Score</span>
+          <div class="text-4xl font-serif font-bold text-[#10222c] my-0.5">
+            {{ score_pct|round(0)|int }}<span class="text-xl font-sans text-gray-500">%</span>
+          </div>
+
+          {% if mastery_calc.mastery_level == 'High' %}
+          <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-high">
+            High Mastery
+          </span>
+          {% elif mastery_calc.mastery_level == 'Medium' %}
+          <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-medium">
+            Medium Mastery
+          </span>
+          {% else %}
+          <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-low">
+            Low Mastery
+          </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Reassurance & Ethical Safeguard Note -->
+      <div
+        class="mt-6 pt-4 border-t border-[#ede6da] flex items-start gap-2.5 text-xs text-gray-600 bg-[#f6f3ed] p-3 rounded-xl">
+        <svg class="w-4 h-4 text-[#1a6b5f] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+          <strong>Diagnostic Feedback:</strong> A lower score simply reveals specific concept gaps to review first. It
+          does not reflect intelligence or academic standing. Review the study resources below before retrying.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Adaptive Study Recommendations -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-5 rounded-full bg-[#1a6b5f]"></div>
+          <h2 class="text-lg font-serif font-bold text-[#10222c]">Recommended Learning Materials</h2>
+        </div>
+        <span class="text-xs text-gray-500">Curated for your mastery level</span>
+      </div>
+
+      {% if recommended_resources %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for res in recommended_resources %}
+        <div
+          class="card-learnloop p-5 flex flex-col justify-between border-[#e2dacd] hover:border-[#1a6b5f] transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded 
+                      {% if res.type == 'notes' %}bg-blue-50 text-blue-700 border border-blue-200
+                      {% elif res.type == 'video' %}bg-red-50 text-red-700 border border-red-200
+                      {% elif res.type == 'example' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+                      {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+                {{ res.type }}
+              </span>
+              {% if res.needs_review %}
+              <span
+                class="text-[9px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                Teacher Review
+              </span>
+              {% endif %}
+            </div>
+
+            <h3 class="font-serif font-bold text-sm text-[#10222c] mb-1.5">{{ res.title }}</h3>
+            <p class="text-xs text-[#6b7a82] leading-relaxed line-clamp-3 mb-4">
+              {{ res.description }}
+            </p>
+          </div>
+
+          <div>
+            {% if res.url %}
+            <a href="{{ res.url }}" target="_blank" rel="noopener noreferrer"
+              class="btn-teal text-xs w-full text-center flex items-center justify-center gap-1.5">
+              <span>Open Search Link</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('view_resource', resource_id=res.id) }}"
+              class="btn-secondary text-xs w-full text-center">
+              Read in App
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="p-6 text-center text-sm text-gray-500 bg-white rounded-xl border border-gray-200">
+        No specific resources found for this module. You can check the complete repository.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#e2dacd]">
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('take_quiz', topic_id=topic.id) }}"
+          class="btn-primary text-xs font-bold px-4 py-2 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Retry Quiz</span>
+        </a>
+        <a href="{{ url_for('resources', topic_id=topic.id) }}" class="btn-secondary text-xs font-semibold px-4 py-2">
+          Review Recommendations
+        </a>
+      </div>
+
+      <a href="{{ url_for('dashboard') }}"
+        class="text-xs font-semibold text-[#1a6b5f] hover:underline flex items-center gap-1">
+        <span>Go to Learning Dashboard</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- Question Review Accordion / Detailed Answers -->
+    <div class="mt-8 pt-6 border-t border-[#e2dacd]">
+      <h3 class="font-serif font-bold text-base text-[#10222c] mb-4">Detailed Question Review</h3>
+      <div class="space-y-3">
+        {% for item in detailed_answers %}
+        <div
+          class="p-4 rounded-xl border {% if item.is_correct %}bg-emerald-50/60 border-emerald-200{% else %}bg-red-50/60 border-red-200{% endif %}">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <span
+              class="text-xs font-semibold {% if item.is_correct %}text-emerald-800{% else %}text-red-800{% endif %}">
+              Question {{ loop.index }}: {{ item.text }}
+            </span>
+            <span
+              class="px-2 py-0.5 rounded text-[10px] font-bold {% if item.is_correct %}badge-high{% else %}badge-low{% endif %}">
+              {% if item.is_correct %}Correct (+20%){% else %}Incorrect{% endif %}
+            </span>
+          </div>
+          <div class="text-xs text-gray-700 space-y-1">
+            <div>Your answer: <span class="font-mono font-bold">{{ item.chosen_option }}</span> ({{
+              item.options.get(item.chosen_option) }})</div>
+            {% if not item.is_correct %}
+            <div class="text-emerald-800">Correct answer: <span class="font-mono font-bold">{{ item.correct_option
+                }}</span> ({{ item.options.get(item.correct_option) }})</div>
+            {% endif %}
+            <div class="pt-1.5 text-gray-600 italic border-t border-black/5 mt-1">
+              <strong>Explanation:</strong> {{ item.explanation }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- ================================================================= -->
+  <!-- INTERACTIVE QUIZ TAKING VIEW -->
+  <!-- ================================================================= -->
+  <div class="space-y-6">
+
+    <!-- Quiz Header Card -->
+    <div class="card-learnloop p-6 border-[#e2dacd] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="eyebrow">{{ topic.subject.name }}</span>
+          <span class="text-gray-300">•</span>
+          <span class="text-xs text-gray-500">Adaptive Diagnostic Mode</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-serif font-bold text-[#10222c]">{{ topic.name }}</h1>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="text-right">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400 block">Question Mix</span>
+          <span
+            class="text-xs font-semibold text-[#1a6b5f] bg-[#ede6da] px-2.5 py-1 rounded-md border border-[#d8cebe]">
+            {{ difficulty_mix }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stepper / Progress Bar -->
+    <div class="bg-[#ede6da] p-3 rounded-xl border border-[#d8cebe] flex items-center justify-between text-xs">
+      <span id="quiz-progress-text" class="font-semibold text-[#10222c]">Question 1 of {{ questions|length }}</span>
+      <div class="w-1/2 sm:w-2/3 bg-white h-2.5 rounded-full overflow-hidden border border-[#d8cebe]">
+        <div id="quiz-progress-bar" class="bg-[#e8a33d] h-full transition-all duration-300" style="width: 20%;"></div>
+      </div>
+      <span id="quiz-score-badge" class="font-mono font-bold text-[#1a6b5f]">Answered: 0/{{ questions|length }}</span>
+    </div>
+
+    <!-- Main Question Form -->
+    <form id="quiz-form" method="POST" action="{{ url_for('submit_quiz', topic_id=topic.id) }}">
+      <input type="hidden" name="difficulty_mix" value="{{ difficulty_mix }}">
+
+      {% for q in questions %}
+      {% set q_idx = loop.index0 %}
+      <div class="quiz-question-card card-learnloop p-6 sm:p-8 space-y-6 {% if not loop.first %}hidden{% endif %}"
+        data-q-index="{{ q_idx }}" data-q-id="{{ q.id }}">
+
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-[#1a6b5f]">
+              Subtopic: {{ q.subtopic }}
+            </span>
+            <h2 class="text-base sm:text-lg font-medium text-[#10222c] mt-1.5 leading-relaxed">
+              {{ loop.index }}. {{ q.text }}
+            </h2>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase 
+                {% if q.difficulty == 'easy' %}bg-green-100 text-green-800
+                {% elif q.difficulty == 'medium' %}bg-yellow-100 text-yellow-800
+                {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ q.difficulty }}
+          </span>
+        </div>
+
+        <!-- 4 Options -->
+        <div class="space-y-2.5">
+          {% for opt_key in ['A', 'B', 'C', 'D'] %}
+          {% set opt_text = q.options.get(opt_key) %}
+          <label
+            class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-[#e2dacd] bg-white hover:bg-[#fcfbf9] hover:border-[#1a6b5f] cursor-pointer transition-all">
+            <input type="radio" name="q_{{ q.id }}" value="{{ opt_key }}" required onchange="handleOptionChange(this)"
+              class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
+            <div class="flex-1 text-sm text-[#1d2b33]">
+              <span class="font-bold mr-1 text-[#10222c]">{{ opt_key }}.</span>
+              <span>{{ opt_text }}</span>
+            </div>
+          </label>
+          {% endfor %}
+        </div>
+
+        <!-- Instant Feedback Panel (hidden until user selects an option) -->
+        <div id="feedback-panel-{{ loop.index0 }}" class="hidden p-4 rounded-xl border text-xs space-y-1 fade-in">
+          <div class="font-bold flex items-center gap-1.5" id="feedback-title-{{ loop.index0 }}"></div>
+          <div class="text-gray-600" id="feedback-expl-{{ loop.index0 }}"></div>
+        </div>
+
+        <!-- Navigation Buttons between questions -->
+        <div class="flex items-center justify-between pt-4 border-t border-[#ede6da]">
+          {% if not loop.first %}
+          <button type="button" onclick="prevQuestion()" class="btn-secondary text-xs px-3.5 py-1.5">
+            ← Previous
+          </button>
+          {% else %}
+          <div></div>
+          {% endif %}
+
+          {% if not loop.last %}
+          <button type="button" onclick="nextQuestion()" class="btn-primary text-xs px-4 py-2">
+            Next Question →
+          </button>
+          {% else %}
+          <button type="submit" id="submit-quiz-btn" class="btn-teal text-xs font-bold px-5 py-2 shadow-sm">
+            Finish & Submit Quiz
+          </button>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endfor %}
+
+    </form>
+
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let currentQ = 0;
+  let totalQuestions = 0;
+  const answeredMap = {};
+
+  function initQuiz() {
+    const cards = document.querySelectorAll('.quiz-question-card');
+    totalQuestions = cards.length;
+  }
+
+  function goToQuestion(idx) {
+    const cards = document.querySelectorAll('.quiz-question-card');
+    totalQuestions = cards.length;
+    if (idx < 0 || idx >= totalQuestions) return;
+    cards.forEach((card, i) => {
+      card.classList.toggle('hidden', i !== idx);
+    });
+    currentQ = idx;
+
+    // Update progress indicator
+    const progText = document.getElementById('quiz-progress-text');
+    if (progText) {
+      progText.innerText = `Question ${idx + 1} of ${totalQuestions}`;
+    }
+    const pct = totalQuestions > 0 ? ((idx + 1) / totalQuestions) * 100 : 0;
+    const progBar = document.getElementById('quiz-progress-bar');
+    if (progBar) {
+      progBar.style.width = `${pct}%`;
+    }
+  }
+
+  function prevQuestion() {
+    goToQuestion(currentQ - 1);
+  }
+
+  function nextQuestion() {
+    goToQuestion(currentQ + 1);
+  }
+
+  function handleOptionChange(input) {
+    const card = input.closest('.quiz-question-card');
+    const qIdx = card && card.dataset.qIndex !== undefined ? parseInt(card.dataset.qIndex, 10) : currentQ;
+    handleOptionSelect(qIdx, input.value, card ? card.dataset.qId : null);
+  }
+
+  function handleOptionSelect(qIdx, chosenOpt, qId) {
+    answeredMap[qIdx] = chosenOpt;
+    const answeredCount = Object.keys(answeredMap).length;
+    const cards = document.querySelectorAll('.quiz-question-card');
+    const total = cards.length || totalQuestions;
+    const badge = document.getElementById('quiz-score-badge');
+    if (badge) {
+      badge.innerText = `Answered: ${answeredCount}/${total}`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initQuiz);
+</script>
+{% endblock %}

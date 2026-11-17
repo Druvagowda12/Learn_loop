@@ -1,0 +1,159 @@
+<!-- Floating Multilingual AI Chatbot Widget & Drawer -->
+<div id="chatbot-widget" class="relative z-50">
+  
+  <!-- Floating Launcher Button -->
+  <button id="chatbot-toggle-btn" 
+          type="button" 
+          aria-label="Open AI Learning Assistant"
+          onclick="toggleChatDrawer()"
+          class="chat-toggle-btn w-14 h-14 rounded-full flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-amber-400/40 shadow-xl">
+    <!-- Chat Icon -->
+    <svg id="chat-icon-open" class="w-7 h-7 text-[#e8a33d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+    </svg>
+    <!-- Close Icon (hidden initially) -->
+    <svg id="chat-icon-close" class="w-6 h-6 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+    </span>
+  </button>
+
+  <!-- Slide-out Chat Drawer -->
+  <div id="chat-drawer" class="chat-drawer hidden-drawer border border-[#e2dacd] shadow-2xl flex flex-col overflow-hidden bg-white">
+    
+    <!-- Drawer Header -->
+    <div class="bg-[#10222c] text-white p-3.5 border-b border-[#213947] flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#e8a33d] text-[#10222c] flex items-center justify-center font-bold shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h3 id="chat-header-title" class="text-xs font-bold text-white tracking-wide">Learnloop AI Assistant</h3>
+            <span id="ai-status-badge" class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/50">
+              AI Integrated
+            </span>
+          </div>
+          <p id="chat-header-sub" class="text-[10px] text-gray-400">VTU Engineering Tutor & Concepts</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-1">
+        <!-- AI API Key Settings Toggle Button -->
+        <button type="button" 
+                onclick="toggleApiKeyPanel()" 
+                id="btn-toggle-apikey"
+                title="Configure Gemini or OpenAI API Key"
+                class="text-gray-300 hover:text-amber-400 p-1.5 rounded-lg hover:bg-white/10 transition flex items-center gap-1 text-[11px] font-semibold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+          </svg>
+          <span class="hidden sm:inline">API Key</span>
+        </button>
+
+        <!-- Close Drawer Button -->
+        <button onclick="toggleChatDrawer()" class="text-gray-400 hover:text-white p-1 rounded-md" aria-label="Close Chat">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Collapsible AI API Key Configuration Panel -->
+    <div id="ai-key-panel" class="hidden bg-[#f6f3ed] border-b border-[#e2dacd] p-3 text-xs animate-fade-down">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="font-bold text-[#10222c] flex items-center gap-1">
+          <span>AI Generative Key (Gemini / OpenAI)</span>
+        </span>
+        <button type="button" onclick="toggleApiKeyPanel()" class="text-gray-400 hover:text-gray-600 text-xs">✕</button>
+      </div>
+      <p class="text-[11px] text-gray-500 mb-2 leading-relaxed">
+        Paste your Google Gemini API key (or OpenAI key) for unconstrained live generative AI answers. (Saved securely in your browser session).
+      </p>
+      <div class="flex items-center gap-2">
+        <input type="password" 
+               id="user-ai-key-input" 
+               placeholder="AIzaSy... or sk-..." 
+               class="flex-1 px-2.5 py-1.5 rounded-lg border border-gray-300 bg-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1a6b5f]">
+        <button type="button" 
+                onclick="saveUserApiKey()" 
+                class="px-3 py-1.5 rounded-lg bg-[#10222c] text-[#e8a33d] font-bold text-xs hover:bg-[#183342] transition shadow-sm">
+          Save
+        </button>
+        <button type="button" 
+                onclick="clearUserApiKey()" 
+                title="Remove API Key"
+                class="px-2 py-1.5 rounded-lg bg-gray-200 text-gray-700 text-xs hover:bg-gray-300 transition">
+          Clear
+        </button>
+      </div>
+      <div id="api-key-status-msg" class="text-[10px] text-emerald-700 font-semibold mt-1.5 hidden"></div>
+    </div>
+
+    <!-- Language Selector Pill Bar -->
+    <div class="bg-[#f6f3ed] px-3 py-2 border-b border-[#e2dacd] flex items-center justify-between">
+      <span class="text-[11px] font-bold text-[#1a6b5f] uppercase tracking-wider">Language:</span>
+      <div class="inline-flex rounded-lg p-0.5 bg-[#ede6da] text-xs font-semibold" role="group">
+        <button type="button" 
+                id="btn-lang-en" 
+                onclick="setChatLanguage('en')" 
+                class="px-2.5 py-1 rounded-md transition-all bg-white text-[#10222c] shadow-sm font-bold">
+          English
+        </button>
+        <button type="button" 
+                id="btn-lang-hi" 
+                onclick="setChatLanguage('hi')" 
+                class="px-2.5 py-1 rounded-md transition-all text-gray-600 hover:text-black font-medium">
+          हिन्दी
+        </button>
+        <button type="button" 
+                id="btn-lang-kn" 
+                onclick="setChatLanguage('kn')" 
+                class="px-2.5 py-1 rounded-md transition-all text-gray-600 hover:text-black font-medium">
+          ಕನ್ನಡ
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Message Stream -->
+    <div id="chat-messages" class="flex-1 p-3.5 overflow-y-auto space-y-3 bg-[#fffdf8] text-sm">
+      <!-- Greeting message rendered dynamically in JS -->
+    </div>
+
+    <!-- Disclaimer Banner -->
+    <div class="px-3 py-1.5 bg-[#f6f3ed] border-t border-[#e2dacd] text-[10.5px] text-gray-500 flex items-center justify-between">
+      <div class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+        </svg>
+        <span id="chat-disclaimer-text">AI-assisted study guidance for engineering topics.</span>
+      </div>
+      <span class="text-[10px] text-gray-400 font-mono">VTU ECE</span>
+    </div>
+
+    <!-- Input Form -->
+    <form id="chat-input-form" onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-[#e2dacd] flex items-center gap-2">
+      <input type="text" 
+             id="chat-input" 
+             placeholder="Ask any engineering question (e.g. What is KVL?)..."
+             autocomplete="off"
+             class="flex-1 text-xs sm:text-sm px-3.5 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-gray-800 transition"
+             required>
+      <button type="submit" 
+              id="chat-send-btn"
+              title="Send question"
+              class="bg-[#10222c] hover:bg-[#1a3848] text-[#e8a33d] p-2.5 rounded-xl transition-all shadow-sm active:scale-95 flex items-center justify-center">
+        <svg class="w-4 h-4 transform rotate-90" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+        </svg>
+      </button>
+    </form>
+
+  </div>
+</div>

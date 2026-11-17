@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Topics & Adaptive Quizzes · Learnloop{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <!-- Header Banner -->
+  <div class="mb-10 text-center sm:text-left sm:flex sm:items-end sm:justify-between border-b border-[#e2dacd] pb-6">
+    <div>
+      <span class="eyebrow" data-i18n="brand_subtitle">{{ _('brand_subtitle') }}</span>
+      <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#10222c] mt-1" data-i18n="topics_title">{{
+        _('topics_title') }}</h1>
+      <p class="text-sm text-[#6b7a82] mt-2 max-w-2xl" data-i18n="topics_subtitle">
+        {{ _('topics_subtitle') }}
+      </p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex items-center gap-2">
+      <span class="text-xs text-gray-500">Legend:</span>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-low">Low (&lt;40%)</span>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-medium">Medium (40-74%)</span>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-high">High (≥75%)</span>
+    </div>
+  </div>
+
+  <!-- Subjects & Topics Loop -->
+  <div class="space-y-12">
+    {% for subject in subjects %}
+    <section class="space-y-4">
+
+      <div class="flex items-center gap-3">
+        <div class="w-2.5 h-6 rounded-full bg-[#e8a33d]"></div>
+        <h2 class="text-xl sm:text-2xl font-serif font-bold text-[#10222c]">{{ subject.name|localize }}</h2>
+        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#ede6da] text-[#1a6b5f]">
+          {{ subject.topics|length }} Modules
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {% for topic in subject.topics %}
+        {% set prog = progress_map.get(topic.id) %}
+        {% set last_score = last_score_map.get(topic.id) %}
+
+        <div class="card-learnloop p-5 flex flex-col justify-between hover:border-[#1a6b5f]/50 transition-all">
+
+          <div>
+            <!-- Badge Bar -->
+            <div class="flex items-center justify-between mb-3">
+              {% if prog %}
+              {% if prog.mastery_level == 'High' %}
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold badge-high">
+                High ({{ prog.mastery_pct|round(0)|int }}%)
+              </span>
+              {% elif prog.mastery_level == 'Medium' %}
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold badge-medium">
+                Medium ({{ prog.mastery_pct|round(0)|int }}%)
+              </span>
+              {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold badge-low">
+                Low ({{ prog.mastery_pct|round(0)|int }}%)
+              </span>
+              {% endif %}
+              {% else %}
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold badge-untested" data-i18n="not_attempted">
+                {{ _('not_attempted') }}
+              </span>
+              {% endif %}
+
+              {% if last_score is not none %}
+              <span class="text-[11px] text-gray-500 font-medium">Last: {{ last_score|round(0)|int }}%</span>
+              {% endif %}
+            </div>
+
+            <h3 class="font-serif font-bold text-lg text-[#10222c] mb-2 leading-snug">
+              {{ topic.name|localize }}
+            </h3>
+
+            <p class="text-xs text-[#6b7a82] leading-relaxed line-clamp-3 mb-4">
+              {{ topic.description|localize }}
+            </p>
+          </div>
+
+          <div class="pt-4 border-t border-[#ede6da] flex items-center justify-between">
+            <a href="{{ url_for('resources', topic_id=topic.id) }}"
+              class="text-xs font-semibold text-[#1a6b5f] hover:underline flex items-center gap-1">
+              <span data-i18n="nav_resources">{{ _('nav_resources') }}</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+
+            <a href="{{ url_for('take_quiz', topic_id=topic.id) }}"
+              class="btn-primary text-xs font-bold px-3.5 py-1.5 shadow-sm">
+              <span data-i18n="start_quiz">{{ _('start_quiz') }}</span>
+            </a>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+    </section>
+    {% endfor %}
+  </div>
+
+  <!-- Study Methodology Note -->
+  <div
+    class="mt-16 p-6 rounded-2xl bg-[#ede6da] border border-[#d8cebe] flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-xl bg-[#10222c] text-[#e8a33d] flex items-center justify-center font-bold text-xl flex-shrink-0">
+        AI
+      </div>
+      <div>
+        <h4 class="font-serif font-bold text-base text-[#10222c]">How the Adaptive Calibration Works</h4>
+        <p class="text-xs text-gray-600 mt-0.5">
+          Scoring ≥80% shifts the next quiz to hard-tier analytical questions; scoring &lt;40% returns to foundational
+          concept questions.
+          Topic mastery reflects your recent 3 attempts weighted towards latest performance.
+        </p>
+      </div>
+    </div>
+    <a href="{{ url_for('resources') }}" class="btn-secondary text-xs font-semibold whitespace-nowrap">
+      Browse Study Resources
+    </a>
+  </div>
+
+</div>
+{% endblock %}

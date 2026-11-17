@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Oversight Portal · Learnloop{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <!-- Header & Faculty Management Actions -->
+  <div class="mb-8 border-b border-[#e2dacd] pb-6 sm:flex sm:items-end sm:justify-between">
+    <div>
+      <span class="eyebrow" data-i18n="faculty_oversight_title">{{ _('faculty_oversight_title') }}</span>
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-[#10222c] mt-1" data-i18n="teacher_title">{{
+        _('teacher_title') }}</h1>
+      <p class="text-sm text-[#6b7a82] mt-1 max-w-2xl leading-relaxed" data-i18n="faculty_oversight_desc">
+        {{ _('faculty_oversight_desc') }}
+      </p>
+    </div>
+
+    <div class="mt-4 sm:mt-0 flex flex-wrap items-center gap-3">
+      <!-- Status Badge -->
+      <span
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot-green"></span>
+        <span data-i18n="teacher_portal_badge">{{ _('teacher_portal_badge') }}</span>
+      </span>
+
+      <!-- Clear All Student Data Danger Button -->
+      <form method="POST" action="{{ url_for('clear_student_data') }}"
+        onsubmit="return confirm('WARNING: Are you sure you want to clear ALL student quiz attempts, answer histories, and mastery progress records? This will reset class diagnostics to zero.');">
+        <input type="hidden" name="action" value="clear_all">
+        <button type="submit"
+          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-red-50 text-red-700 hover:bg-red-100 border border-red-300 transition shadow-sm active:scale-95">
+          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span data-i18n="clear_all_data">{{ _('clear_all_data') }}</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Educational Safeguard Banner -->
+  <div
+    class="mb-8 p-5 rounded-2xl bg-[#10222c] text-[#f6f3ed] border border-[#213947] flex items-start gap-3.5 shadow-md">
+    <div
+      class="w-9 h-9 rounded-xl bg-[#e8a33d] text-[#10222c] flex items-center justify-center font-bold text-lg flex-shrink-0 mt-0.5">
+      !
+    </div>
+    <div class="space-y-1">
+      <h3 class="text-sm font-bold text-amber-300" data-i18n="safeguard_title">{{ _('safeguard_title') }}</h3>
+      <p class="text-xs text-gray-300 leading-relaxed" data-i18n="safeguard_desc">
+        {{ _('safeguard_desc') }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Section 1: Topics Requiring Teaching Intervention -->
+  <section class="space-y-4 mb-10">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-5 rounded-full bg-[#e8a33d]"></div>
+        <h2 class="text-lg font-bold text-[#10222c]" data-i18n="intervention_radar_title">{{
+          _('intervention_radar_title') }}</h2>
+      </div>
+      <span class="text-xs text-gray-500 font-medium" data-i18n="intervention_radar_desc">{{
+        _('intervention_radar_desc') }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for item in topic_stats %}
+      <div
+        class="card-learnloop p-5 flex flex-col justify-between {% if item.needs_attention %}border-amber-400 bg-amber-50/15{% else %}border-[#e2dacd]{% endif %}">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] uppercase font-bold text-[#1a6b5f] tracking-wider">
+              {{ item.topic.subject.name|localize }}
+            </span>
+            {% if item.needs_attention %}
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300"
+              data-i18n="needs_attention">
+              {{ _('needs_attention') }}
+            </span>
+            {% else %}
+            <span
+              class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300"
+              data-i18n="on_track">
+              {{ _('on_track') }}
+            </span>
+            {% endif %}
+          </div>
+
+          <h3 class="font-bold text-base text-[#10222c] mb-2">{{ item.topic.name|localize }}</h3>
+
+          <div class="grid grid-cols-2 gap-2 text-xs py-2 bg-[#f6f3ed] rounded-lg p-2.5 my-2">
+            <div>
+              <span class="text-[10px] text-gray-400 block uppercase font-semibold" data-i18n="class_avg">{{
+                _('class_avg') }}</span>
+              <span class="text-sm font-bold font-mono text-[#10222c]">
+                {{ item.avg_score ~ '%' if item.avg_score is not none else _('no_attempts') }}
+              </span>
+            </div>
+            <div>
+              <span class="text-[10px] text-gray-400 block uppercase font-semibold" data-i18n="low_mastery">{{
+                _('low_mastery') }}</span>
+              <span
+                class="text-sm font-bold font-mono {% if item.low_count > 0 %}text-red-700{% else %}text-emerald-700{% endif %}">
+                {{ item.low_count }} {{ _('students_count_label') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-[#ede6da] flex items-center justify-between text-xs">
+          <span class="text-gray-500">{{ item.attempts_count }} {{ _('total_attempts_label') }}</span>
+          <a href="{{ url_for('resources', topic_id=item.topic.id) }}" class="text-[#1a6b5f] font-bold hover:underline"
+            data-i18n="inspect_materials">
+            {{ _('inspect_materials') }}
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Section 2: Student Diagnostic Progress Summary & Management Table -->
+  <section class="space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-5 rounded-full bg-[#1a6b5f]"></div>
+        <h2 class="text-lg font-bold text-[#10222c]" data-i18n="student_roster_title">{{ _('student_roster_title') }}
+        </h2>
+      </div>
+      <span class="text-xs text-gray-500 font-medium">{{ student_summaries|length }} <span
+          data-i18n="registered_students_label">{{ _('registered_students_label') }}</span></span>
+    </div>
+
+    <div class="card-learnloop overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead
+            class="bg-[#f6f3ed] text-gray-700 font-bold border-b border-[#e2dacd] uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="p-3.5 pl-5" data-i18n="student_name_th">{{ _('student_name_th') }}</th>
+              <th class="p-3.5" data-i18n="email_th">{{ _('email_th') }}</th>
+              <th class="p-3.5" data-i18n="attempts_th">{{ _('attempts_th') }}</th>
+              <th class="p-3.5" data-i18n="mean_score_th">{{ _('mean_score_th') }}</th>
+              <th class="p-3.5" data-i18n="last_activity_th">{{ _('last_activity_th') }}</th>
+              <th class="p-3.5" data-i18n="language_th">{{ _('language_th') }}</th>
+              <th class="p-3.5 pr-5 text-right" data-i18n="student_actions_th">{{ _('student_actions_th') }}</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#ede6da]">
+            {% for s in student_summaries %}
+            <tr class="hover:bg-[#fffdf8] transition-colors">
+              <td class="p-3.5 pl-5 font-bold text-gray-900">
+                {{ s.student.name }}
+                {% if s.student.is_synthetic %}
+                <span
+                  class="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gray-100 text-gray-600 border border-gray-300">
+                  Demo
+                </span>
+                {% endif %}
+              </td>
+              <td class="p-3.5 text-gray-500 font-mono">{{ s.student.email }}</td>
+              <td class="p-3.5 font-semibold text-gray-800">{{ s.attempts_count }}</td>
+              <td class="p-3.5 font-bold font-mono">
+                <span class="px-2 py-0.5 rounded text-[11px] 
+                    {% if s.avg_score >= 75.0 %}badge-high
+                    {% elif s.avg_score >= 40.0 %}badge-medium
+                    {% else %}badge-low{% endif %}">
+                  {{ s.avg_score }}%
+                </span>
+              </td>
+              <td class="p-3.5 text-gray-600">
+                {% if s.last_attempt %}
+                <span class="font-semibold text-gray-900">{{ s.last_attempt.topic.name|localize }}</span>
+                <span class="text-[10px] text-gray-400 block font-mono">
+                  {{ s.last_attempt.taken_at.strftime('%Y-%m-%d %H:%M') if s.last_attempt.taken_at else 'Recent' }}
+                </span>
+                {% else %}
+                <span class="text-gray-400 italic" data-i18n="no_attempts">{{ _('no_attempts') }}</span>
+                {% endif %}
+              </td>
+              <td class="p-3.5 uppercase font-mono text-[11px] text-gray-600">
+                {{ s.student.preferred_language }}
+              </td>
+              <td class="p-3.5 pr-5 text-right">
+                <div class="inline-flex items-center gap-1.5">
+                  <!-- Reset Progress Button -->
+                  <form method="POST" action="{{ url_for('clear_student_data') }}"
+                    onsubmit="return confirm('Clear all quiz attempts and progress history for {{ s.student.name }}?');">
+                    <input type="hidden" name="action" value="reset_student">
+                    <input type="hidden" name="student_id" value="{{ s.student.id }}">
+                    <button type="submit" title="Reset student test attempts and progress to zero"
+                      class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 transition"
+                      data-i18n="reset_data_btn">
+                      {{ _('reset_data_btn') }}
+                    </button>
+                  </form>
+
+                  <!-- Remove Student Account Button -->
+                  <form method="POST" action="{{ url_for('clear_student_data') }}"
+                    onsubmit="return confirm('Permanently remove {{ s.student.name }} account and all associated data?');">
+                    <input type="hidden" name="action" value="delete_student">
+                    <input type="hidden" name="student_id" value="{{ s.student.id }}">
+                    <button type="submit" title="Delete student account permanently"
+                      class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition"
+                      data-i18n="remove_btn">
+                      {{ _('remove_btn') }}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="p-6 text-center text-gray-500 italic" data-i18n="no_students_found">
+                {{ _('no_students_found') }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard · Learnloop{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+  <!-- Student Welcome Header -->
+  <div class="mb-8 border-b border-[#e2dacd] pb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <span class="eyebrow" data-i18n="diagnostic_analytics_title">{{ _('diagnostic_analytics_title') }}</span>
+      <h1 class="text-3xl sm:text-4xl font-serif font-bold text-[#10222c] mt-1">
+        <span data-i18n="learning_progress">{{ _('learning_progress') }}</span>: {{ user.name }}
+      </h1>
+      <p class="text-sm text-[#6b7a82] mt-1" data-i18n="topics_subtitle">
+        {{ _('topics_subtitle') }}
+      </p>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('topics') }}" class="btn-primary text-xs font-bold px-4 py-2 flex items-center gap-1.5 shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span data-i18n="start_quiz">{{ _('start_quiz') }}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Metric Cards (4 cards) -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
+    
+    <div class="card-learnloop p-5 bg-[#fffdf8]">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Topics Completed</div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-3xl font-serif font-bold text-[#10222c]">{{ completed_count }}</span>
+        <span class="text-xs text-gray-400">/ {{ total_topics }} modules</span>
+      </div>
+      <div class="w-full bg-[#ede6da] h-1.5 rounded-full mt-3 overflow-hidden">
+        <div id="topics-completed-bar" class="bg-[#1a6b5f] h-full" data-width="{{ (completed_count / total_topics * 100)|round(0)|int if total_topics else 0 }}"></div>
+      </div>
+    </div>
+
+    <div class="card-learnloop p-5 bg-[#fffdf8]">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Average Score</div>
+      <div class="flex items-baseline gap-1">
+        <span class="text-3xl font-serif font-bold text-[#10222c]">{{ avg_score }}</span>
+        <span class="text-lg font-bold text-gray-500">%</span>
+      </div>
+      <p class="text-[11px] text-gray-400 mt-2">Across all diagnostic quizzes</p>
+    </div>
+
+    <div class="card-learnloop p-5 bg-[#fffdf8]">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Total Attempts</div>
+      <div class="text-3xl font-serif font-bold text-[#10222c]">{{ total_attempts }}</div>
+      <p class="text-[11px] text-gray-400 mt-2">Recorded quiz sessions</p>
+    </div>
+
+    <div class="card-learnloop p-5 bg-[#fffdf8]">
+      <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">Overall Mastery</div>
+      <div class="mt-1">
+        {% if overall_mastery == 'High' %}
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold badge-high">High Mastery</span>
+        {% elif overall_mastery == 'Medium' %}
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold badge-medium">Medium Mastery</span>
+        {% elif overall_mastery == 'Low' %}
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold badge-low">Low Mastery</span>
+        {% else %}
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-bold badge-untested">Not Started</span>
+        {% endif %}
+      </div>
+      <p class="text-[11px] text-gray-400 mt-2">Weighted across active topics</p>
+    </div>
+
+  </div>
+
+  <!-- Interactive Tabs (No Reload) -->
+  <div class="border-b border-[#e2dacd] mb-8">
+    <nav class="flex space-x-6 text-sm font-semibold" aria-label="Dashboard Tabs">
+      <button type="button" 
+              id="tab-btn-overview" 
+              onclick="switchDashboardTab('overview')" 
+              class="pb-3 border-b-2 border-[#1a6b5f] text-[#1a6b5f] flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Overview & Visual Charts</span>
+      </button>
+
+      <button type="button" 
+              id="tab-btn-strengths" 
+              onclick="switchDashboardTab('strengths')" 
+              class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span>Strengths & Learning Gaps</span>
+      </button>
+
+      <button type="button" 
+              id="tab-btn-attempts" 
+              onclick="switchDashboardTab('attempts')" 
+              class="pb-3 border-b-2 border-transparent text-gray-500 hover:text-gray-800 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Recent Attempts Log</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- TAB 1: OVERVIEW & CHARTS -->
+  <div id="tab-content-overview" class="space-y-8 fade-in">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Topic Mastery Bar Chart -->
+      <div class="card-learnloop p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-serif font-bold text-base text-[#10222c]">Curriculum Mastery by Topic</h3>
+            <p class="text-xs text-gray-500">Weighted score percentage (%) per topic</p>
+          </div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+            Real-time
+          </span>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="masteryBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chronological Score Trend Line Chart -->
+      <div class="card-learnloop p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-serif font-bold text-base text-[#10222c]">Score Progression Trend</h3>
+            <p class="text-xs text-gray-500">Historical performance across consecutive attempts</p>
+          </div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+            Adaptive Trajectory
+          </span>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="scoreTrendChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 2: STRENGTHS & LEARNING GAPS -->
+  <div id="tab-content-strengths" class="hidden space-y-8 fade-in">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- Identified Strengths (High Mastery >=75%) -->
+      <div class="card-learnloop p-6 border-emerald-200 bg-emerald-50/20">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-emerald-100">
+          <div class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
+            ✓
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-base text-emerald-900">Demonstrated Strengths</h3>
+            <p class="text-xs text-emerald-700">Topics with High mastery (≥75%)</p>
+          </div>
+        </div>
+
+        {% if strengths %}
+          <div class="space-y-3">
+            {% for s in strengths %}
+              <div class="p-3.5 rounded-xl bg-white border border-emerald-200 flex items-center justify-between shadow-sm">
+                <div>
+                  <h4 class="text-sm font-bold text-gray-900">{{ s.topic.name }}</h4>
+                  <p class="text-[11px] text-gray-500">{{ s.topic.subject.name }}</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-mono font-bold text-emerald-700">{{ s.mastery_pct|round(0)|int }}%</span>
+                  <a href="{{ url_for('resources', topic_id=s.topic.id, type='practice') }}" class="block text-[10px] text-[#1a6b5f] font-semibold hover:underline">
+                    Challenge Problems →
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-6 text-center text-xs text-gray-500 bg-white rounded-xl border border-gray-200">
+            No high mastery topics recorded yet. Take quizzes and score ≥75% to showcase strengths!
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Learning Gaps / Topics to Revise (<75%) -->
+      <div class="card-learnloop p-6 border-amber-200 bg-amber-50/20">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-100">
+          <div class="w-7 h-7 rounded-lg bg-[#e8a33d] text-[#10222c] flex items-center justify-center font-bold text-xs">
+            !
+          </div>
+          <div>
+            <h3 class="font-serif font-bold text-base text-amber-950">Recommended For Revision</h3>
+            <p class="text-xs text-amber-800">Topics with Low (&lt;40%) or Medium (40-74%) mastery</p>
+          </div>
+        </div>
+
+        {% if gaps %}
+          <div class="space-y-3">
+            {% for g in gaps %}
+              <div class="p-3.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between shadow-sm">
+                <div>
+                  <h4 class="text-sm font-bold text-gray-900">{{ g.topic.name }}</h4>
+                  <p class="text-[11px] text-gray-500">{{ g.topic.subject.name }}</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-sm font-mono font-bold {% if g.mastery_level == 'Low' %}text-red-700{% else %}text-amber-700{% endif %}">
+                    {{ g.mastery_pct|round(0)|int }}% ({{ g.mastery_level }})
+                  </span>
+                  <a href="{{ url_for('resources', topic_id=g.topic.id) }}" class="block text-[10px] text-amber-800 font-bold hover:underline">
+                    Study Suggested Notes →
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-6 text-center text-xs text-emerald-800 bg-white rounded-xl border border-emerald-200 font-medium">
+            Outstanding! All your tested topics are in the High mastery bracket.
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 3: RECENT ATTEMPTS LOG -->
+  <div id="tab-content-attempts" class="hidden fade-in">
+    <div class="card-learnloop overflow-hidden">
+      <div class="p-5 border-b border-[#e2dacd] flex items-center justify-between">
+        <h3 class="font-serif font-bold text-base text-[#10222c]">Diagnostic Quiz History</h3>
+        <span class="text-xs text-gray-500">Server-verified attempt timestamps</span>
+      </div>
+
+      {% if attempts %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-[#f6f3ed] text-gray-600 font-semibold border-b border-[#e2dacd]">
+              <tr>
+                <th class="p-3.5 pl-5">Date & Time</th>
+                <th class="p-3.5">Topic & Subject</th>
+                <th class="p-3.5">Difficulty Calibration</th>
+                <th class="p-3.5">Score</th>
+                <th class="p-3.5">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#ede6da]">
+              {% for att in attempts %}
+                <tr class="hover:bg-[#fffdf8] transition-colors">
+                  <td class="p-3.5 pl-5 text-gray-500 font-mono">
+                    {{ att.taken_at.strftime('%Y-%m-%d %H:%M') if att.taken_at else 'Recent' }}
+                  </td>
+                  <td class="p-3.5">
+                    <span class="font-bold text-gray-900 block">{{ att.topic.name }}</span>
+                    <span class="text-[10px] text-gray-400">{{ att.topic.subject.name }}</span>
+                  </td>
+                  <td class="p-3.5 text-gray-600 font-medium">
+                    {{ att.difficulty_mix or 'Standard' }}
+                  </td>
+                  <td class="p-3.5 font-bold font-mono">
+                    <span class="px-2 py-0.5 rounded text-[11px] 
+                      {% if att.score_pct >= 75.0 %}badge-high
+                      {% elif att.score_pct >= 40.0 %}badge-medium
+                      {% else %}badge-low{% endif %}">
+                      {{ att.score_pct|round(0)|int }}%
+                    </span>
+                  </td>
+                  <td class="p-3.5">
+                    <a href="{{ url_for('take_quiz', topic_id=att.topic.id) }}" class="text-[#1a6b5f] font-semibold hover:underline">
+                      Retake
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-xs text-gray-500">
+          No quiz attempts recorded yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script id="dashboard-chart-data" type="application/json">
+  {
+    "topicLabels": {{ chart_topic_labels|tojson }},
+    "topicScores": {{ chart_topic_scores|tojson }},
+    "trendLabels": {{ chart_trend_labels|tojson }},
+    "trendScores": {{ chart_trend_scores|tojson }}
+  }
+</script>
+<script>
+  // Tab switching logic
+  function switchDashboardTab(tabName) {
+    const tabs = ['overview', 'strengths', 'attempts'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const content = document.getElementById(`tab-content-${t}`);
+      if (t === tabName) {
+        btn.classList.add('border-[#1a6b5f]', 'text-[#1a6b5f]');
+        btn.classList.remove('border-transparent', 'text-gray-500');
+        content.classList.remove('hidden');
+      } else {
+        btn.classList.remove('border-[#1a6b5f]', 'text-[#1a6b5f]');
+        btn.classList.add('border-transparent', 'text-gray-500');
+        content.classList.add('hidden');
+      }
+    });
+  }
+
+  // Chart.js initialization & UI enhancements
+  document.addEventListener('DOMContentLoaded', function() {
+    // 0. Update Topics Completed Progress Bar
+    const completedBar = document.getElementById('topics-completed-bar');
+    if (completedBar && completedBar.dataset.width !== undefined) {
+      completedBar.style.width = completedBar.dataset.width + '%';
+    }
+
+    // Chart Data parsed safely from JSON script block
+    const chartDataEl = document.getElementById('dashboard-chart-data');
+    const chartData = chartDataEl ? JSON.parse(chartDataEl.textContent || '{}') : {};
+    const labels = chartData.topicLabels || [];
+    const scores = chartData.topicScores || [];
+    const trendLabels = chartData.trendLabels || [];
+    const trendScores = chartData.trendScores || [];
+
+    // 1. Mastery Bar Chart
+    const barCtx = document.getElementById('masteryBarChart');
+    if (barCtx) {
+      new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Mastery (%)',
+            data: scores,
+            backgroundColor: scores.map(s => s >= 75 ? '#1a6b5f' : (s >= 40 ? '#e8a33d' : '#e05353')),
+            borderRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { stepSize: 20 }
+            },
+            x: {
+              ticks: {
+                display: false // hide clutter on mobile/desktop
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // 2. Score Trend Line Chart
+    const lineCtx = document.getElementById('scoreTrendChart');
+    if (lineCtx) {
+      new Chart(lineCtx, {
+        type: 'line',
+        data: {
+          labels: trendLabels.length ? trendLabels : ['Start'],
+          datasets: [{
+            label: 'Quiz Score (%)',
+            data: trendScores.length ? trendScores : [0],
+            borderColor: '#1a6b5f',
+            backgroundColor: 'rgba(26, 107, 95, 0.12)',
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#e8a33d',
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { stepSize: 25 }
+            },
+            x: {
+              ticks: { display: false }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

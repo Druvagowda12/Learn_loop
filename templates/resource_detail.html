@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ resource.title }} · Learnloop{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+
+  <!-- Breadcrumbs & Meta -->
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+    <div class="flex items-center gap-2">
+      <a href="{{ url_for('resources') }}" class="hover:text-[#1a6b5f]">Repository</a>
+      <span>/</span>
+      <span class="text-[#1a6b5f] font-semibold">{{ resource.topic.subject.name }}</span>
+      <span>/</span>
+      <span class="text-gray-700">{{ resource.topic.name }}</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded
+        {% if resource.type == 'notes' %}bg-blue-50 text-blue-700 border border-blue-200
+        {% elif resource.type == 'video' %}bg-red-50 text-red-700 border border-red-200
+        {% elif resource.type == 'example' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+        {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
+        {{ resource.type }}
+      </span>
+      <span class="capitalize text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+        {{ resource.difficulty }} level
+      </span>
+    </div>
+  </div>
+
+  <!-- Resource Document Container -->
+  <article class="card-learnloop p-6 sm:p-10 border-[#e2dacd] space-y-6">
+    
+    <header class="border-b border-[#ede6da] pb-6">
+      <span class="eyebrow">Learning Material</span>
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1">{{ resource.title }}</h1>
+      <p class="text-sm text-gray-600 mt-2">{{ resource.description }}</p>
+    </header>
+
+    <!-- Content Body -->
+    <div class="prose max-w-none text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line space-y-4 font-sans">
+      {{ resource.content or 'No text content available for this resource.' }}
+    </div>
+
+    <!-- Action Footer -->
+    <footer class="pt-6 border-t border-[#ede6da] flex flex-wrap items-center justify-between gap-4">
+      <div class="text-xs text-emerald-700 flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span>Reading this resource logged towards your topic progress.</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="{{ url_for('resources') }}" class="btn-secondary text-xs font-semibold px-4 py-2" data-i18n="back_to_repository">
+          {{ _('back_to_repository') }}
+        </a>
+        <a href="{{ url_for('take_quiz', topic_id=resource.topic_id) }}" class="btn-primary text-xs font-bold px-4 py-2" data-i18n="start_quiz">
+          {{ _('start_quiz') }} →
+        </a>
+      </div>
+    </footer>
+
+  </article>
+
+</div>
+{% endblock %}
