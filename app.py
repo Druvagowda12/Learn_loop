@@ -945,8 +945,17 @@ def internal_server_error(e):
 
 
 if __name__ == '__main__':
-    # Run development server only when executed directly (never during gunicorn/WSGI deployment)
     port = int(os.environ.get('PORT', 5000))
     debug_mode = os.environ.get('FLASK_DEBUG', '0').lower() in ('1', 'true', 't')
-    app.run(host='0.0.0.0' if os.environ.get('PORT') else '127.0.0.1', port=port, debug=debug_mode)
+    host = '0.0.0.0' if os.environ.get('PORT') else '127.0.0.1'
+
+    if debug_mode:
+        app.run(host=host, port=port, debug=True)
+    else:
+        try:
+            from waitress import serve
+            print(f" * Serving production WSGI with Waitress on http://{host}:{port}", flush=True)
+            serve(app, host=host, port=port)
+        except ImportError:
+            app.run(host=host, port=port, debug=False)
 
