@@ -125,3 +125,51 @@ def test_submit_quiz_numeric_index(client):
 
     assert res.status_code == 200
     assert b"Quiz Results" in res.data or b"Results" in res.data or b"score" in res.data.lower() or b"\xe0\xb2\xb0\xe0\xb2\xb8\xe0\xb2\xaa\xe0\xb3\x8d\xe0\xb2\xb0\xe0\xb2\xb6\xe0\xb3\x8d\xe0\xb2\xa8\xe0\xb3\x86" in res.data
+
+
+def test_no_placeholder_translations_in_questions(client):
+    """Verify that zero questions contain placeholder text like '(ಕನ್ನಡ ರೂಪಾಂತರ)' or '(हिंदी अनुवाद)'."""
+    with app.app_context():
+        # 1. Zero placeholder tags
+        bad_kn = Question.query.filter(Question.text_kn.like('%(ಕನ್ನಡ ರೂಪಾಂತರ)%')).count()
+        bad_hi = Question.query.filter(Question.text_hi.like('%(हिंदी अनुवाद)%')).count()
+        assert bad_kn == 0, f"Found {bad_kn} questions with '(ಕನ್ನಡ ರೂಪಾಂತರ)'"
+        assert bad_hi == 0, f"Found {bad_hi} questions with '(हिंदी अनुवाद)'"
+
+        # 2. Check all questions have full Hindi fields
+        questions = Question.query.all()
+        assert len(questions) >= 200
+        for q in questions:
+            assert q.text_hi is not None and len(q.text_hi) > 0
+            assert q.option_a_hi is not None and len(q.option_a_hi) > 0
+            assert q.option_b_hi is not None and len(q.option_b_hi) > 0
+            assert q.option_c_hi is not None and len(q.option_c_hi) > 0
+            assert q.option_d_hi is not None and len(q.option_d_hi) > 0
+            assert q.option_e_hi is not None and len(q.option_e_hi) > 0
+            assert q.explanation_hi is not None and len(q.explanation_hi) > 0
+
+            # Hindi to_dict check
+            dict_hi = q.to_dict(lang='hi')
+            assert len(dict_hi['options']) == 5
+            assert len(dict_hi['options_list']) == 5
+            assert dict_hi['correct_index'] == q.correct_index
+            # Ensure Hindi Devanagari script is present
+            assert any('\u0900' <= char <= '\u097F' for char in dict_hi['text']) or any('\u0900' <= char <= '\u097F' for char in dict_hi['options_list'])
+
+
+def test_quiz_api_hindi_support(client):
+    """Verify that /api/quiz/<topic_id>/questions serves 5 options in Hindi (lang=hi)."""
+    with app.app_context():
+        topic = Topic.query.first()
+        topic_id = topic.id
+
+    res_hi = client.get(f'/api/quiz/{topic_id}/questions?lang=hi&difficulty=medium')
+    assert res_hi.status_code == 200
+    data_hi = res_hi.get_json()
+    assert len(data_hi['questions']) > 0
+    for q in data_hi['questions']:
+        assert len(q['options']) == 5
+        assert len(q['options_list']) == 5
+        assert 0 <= q['correct_index'] <= 4
+        assert any('\u0900' <= c <= '\u097F' for c in q['text']) or any('\u0900' <= c <= '\u097F' for c in q['options_list'])
+

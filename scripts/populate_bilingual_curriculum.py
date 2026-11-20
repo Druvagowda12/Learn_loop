@@ -48,7 +48,7 @@ load_dotenv()
 from app import app, db
 from models import Subject, Topic, Question, Resource
 from scripts.bilingual_resources_data import TOPIC_RESOURCES_KN
-from scripts.bilingual_questions_data import NEW_BILINGUAL_QUESTIONS
+from scripts.curriculum_translations import ALL_CURRICULUM_QUESTIONS
 
 VIDEO_MAPPINGS_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'video_mappings.json'))
 VIDEO_MAPPINGS = {}
@@ -72,14 +72,26 @@ def run_schema_migration():
             ("option_d_kn", "TEXT"),
             ("option_e_kn", "TEXT"),
             ("explanation_kn", "TEXT"),
-            ("subtopic_kn", "VARCHAR(100)")
+            ("subtopic_kn", "VARCHAR(100)"),
+            ("text_hi", "TEXT"),
+            ("option_a_hi", "TEXT"),
+            ("option_b_hi", "TEXT"),
+            ("option_c_hi", "TEXT"),
+            ("option_d_hi", "TEXT"),
+            ("option_e_hi", "TEXT"),
+            ("explanation_hi", "TEXT"),
+            ("subtopic_hi", "VARCHAR(100)")
         ]
 
         r_cols = [
             ("title_kn", "VARCHAR(250)"),
             ("description_kn", "TEXT"),
             ("content_kn", "TEXT"),
-            ("url_kn", "VARCHAR(500)")
+            ("url_kn", "VARCHAR(500)"),
+            ("title_hi", "VARCHAR(250)"),
+            ("description_hi", "TEXT"),
+            ("content_hi", "TEXT"),
+            ("url_hi", "VARCHAR(500)")
         ]
 
         with engine.connect() as conn:
@@ -169,110 +181,26 @@ def populate_bilingual_resources():
         print(f"Successfully populated and localized {updated_count} resources in database.")
 
 
-def upgrade_existing_questions():
-    """Ensures all existing questions have 5 distinct options and parallel Kannada text."""
-    print("\nUpgrading existing questions with 5 options and parallel Kannada fields...", flush=True)
+def sync_clean_multilingual_questions():
+    """
+    Synchronizes all 210 questions across 14 topics with 100% clean English,
+    Kannada, and Hindi translations with 5 distinct options and ZERO placeholders.
+    """
+    print("\nSynchronizing clean 5-option questions (en, kn, hi) across all 14 topics...", flush=True)
     with app.app_context():
-        questions = Question.query.all()
-        upgraded_count = 0
-
-        # Subtopic Kannada dictionary
-        subtopic_kn_map = {
-            "Array Indexing": "ಅರೇ ಇಂಡೆಕ್ಸಿಂಗ್",
-            "Array Declaration": "ಅರೇ ಘೋಷಣೆ",
-            "Bounds Checking": "ಗಡಿ ಪರಿಶೀಲನೆ",
-            "Array Initialization": "ಅರೇ ಪ್ರಾರಂಭೀಕರಣ",
-            "Multi-dimensional Arrays": "ಬಹು-ಆಯಾಮದ ಅರೇಗಳು",
-            "Array Sizing": "ಅರೇ ಗಾತ್ರ ಲೆಕ್ಕಾಚಾರ",
-            "Array Decay": "ಅರೇ ಡಿಕೇ",
-            "Pointer-to-Array Arithmetic": "ಪಾಯಿಂಟರ್ ಅರೇ ಅಂಕಗಣಿತ",
-            "Pointer Arrays": "ಪಾಯಿಂಟರ್ ಅರೇಗಳು",
-            "VLAs": "ವೇರಿಯೇಬಲ್ ಲೆಂತ್ ಅರೇಗಳು",
-            "Pointer Arithmetic": "ಪಾಯಿಂಟರ್ ಅಂಕಗಣಿತ",
-            "Address-of Operator": "ಅಡ್ರೆಸ್ ಆಪರೇಟರ್ (&)",
-            "Dereference Operator": "ಡಿರೆಫರೆನ್ಸ್ ಆಪರೇಟರ್ (*)",
-            "Null Pointers": "ನಲ್ ಪಾಯಿಂಟರ್‌ಗಳು",
-            "Dynamic Allocation": "ಡೈನಾಮಿಕ್ ಮೆಮೊರಿ ಹಂಚಿಕೆ",
-            "Memory Allocation": "ಮೆಮೊರಿ ಹಂಚಿಕೆ ವಿಧಾನಗಳು",
-            "Memory Safety": "ಮೆಮೊರಿ ಸುರಕ್ಷತೆ",
-            "Generic Pointers": "ಜೆನೆರಿಕ್ ಪಾಯಿಂಟರ್‌ಗಳು (void*)",
-            "Function Call Stack": "ಕಾಲ್ ಸ್ಟ್ಯಾಕ್ ಫ್ರೇಮ್‌ಗಳು",
-            "Recursion": "ಪುನರಾವರ್ತನೆ (Recursion)",
-            "Loop Constructs": "ಲೂಪ್ ರಚನೆಗಳು",
-            "Branching": "ಷರತ್ತುಬದ್ಧ ಶಾಖೆಗಳು",
-            "Hexadecimal": "ಹೆಕ್ಸಾಡೆಸಿಮಲ್ ಪರಿವರ್ತನೆ",
-            "2's Complement": "2's ಕಾಂಪ್ಲಿಮೆಂಟ್ ಅಂಕಗಣಿತ",
-            "Gray Code": "ಗ್ರೇ ಕೋಡ್",
-            "K-Map": "K-ಮ್ಯಾಪ್ ಸರಳೀಕರಣ",
-            "Logic Gates": "ಲಾಜಿಕ್ ಗೇಟ್‌ಗಳು",
-            "Universal Gates": "ಸಾರ್ವತ್ರಿಕ ಗೇಟ್‌ಗಳು",
-            "Combinational Circuits": "ಸಂಯೋಜಿತ ಸರ್ಕ್ಯೂಟ್‌ಗಳು",
-            "Multiplexers": "ಮಲ್ಟಿಪ್ಲೆಕ್ಸರ್‌ಗಳು",
-            "Eigenvalues": "ಐಗನ್‌ಮೌಲ್ಯಗಳು",
-            "Matrix Rank": "ಮ್ಯಾಟ್ರಿಕ್ಸ್ ಶ್ರೇಣಿ",
-            "Partial Differentiation": "ಭಾಗಶಃ ಅವಕಲನ",
-            "Euler's Theorem": "ಯೂಲರ್ ಪ್ರಮೇಯ",
-            "Double Integrals": "ಡಬಲ್ ಇಂಟಿಗ್ರಲ್‌ಗಳು",
-            "Ohm's Law": "ಓಮ್ ನಿಯಮ",
-            "Kirchhoff's Laws": "ಕಿರ್ಚಾಫ್ ನಿಯಮಗಳು",
-            "Series-Parallel": "ಸರಣಿ-ಸಮಾಂತರ ವಿಶ್ಲೇಷಣೆ",
-            "Mesh Analysis": "ಮೆಶ್ ವಿಶ್ಲೇಷಣೆ",
-            "Nodal Analysis": "ನೋಡಲ್ ವಿಶ್ಲೇಷಣೆ"
-        }
-
-        for q in questions:
-            changed = False
-            # 1. 5th Option
-            if not q.option_e:
-                # Add context-appropriate 5th option
-                if q.correct_option in ('A', 'B', 'C', 'D'):
-                    q.option_e = "None of the above"
-                    q.option_e_kn = "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ"
-                else:
-                    q.option_e = "Both A and B"
-                    q.option_e_kn = "A ಮತ್ತು B ಎರಡೂ"
-                changed = True
-
-            # 2. Kannada Subtopic
-            if not q.subtopic_kn:
-                q.subtopic_kn = subtopic_kn_map.get(q.subtopic, f"{q.subtopic} (ಕನ್ನಡ)")
-                changed = True
-
-            # 3. Kannada question text and options if missing
-            if not q.text_kn:
-                q.text_kn = f"{q.text} (ಕನ್ನಡ ರೂಪಾಂತರ)"
-                q.option_a_kn = f"{q.option_a}"
-                q.option_b_kn = f"{q.option_b}"
-                q.option_c_kn = f"{q.option_c}"
-                q.option_d_kn = f"{q.option_d}"
-                if not q.option_e_kn:
-                    q.option_e_kn = q.option_e or "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ"
-                q.explanation_kn = f"ವಿವರಣೆ: {q.explanation}"
-                changed = True
-
-            if changed:
-                upgraded_count += 1
-
-        db.session.commit()
-        print(f"Successfully verified and upgraded {upgraded_count} existing questions to 5-option bilingual format.")
-
-
-def insert_new_questions():
-    """Inserts brand new 5-option VTU questions across easy, medium, and hard tiers."""
-    print("\nSeeding new 5-option questions for all 4 subjects across Easy, Medium, and Hard tiers...", flush=True)
-    with app.app_context():
-        inserted_count = 0
         topic_map = {t.name: t for t in Topic.query.all()}
+        updated_count = 0
+        inserted_count = 0
 
-        for item in NEW_BILINGUAL_QUESTIONS:
+        for item in ALL_CURRICULUM_QUESTIONS:
             t = topic_map.get(item["topic"])
             if not t:
+                print(f"Warning: topic not found: {item['topic']}")
                 continue
 
-            # Check if this question text already exists to prevent duplicate insertion
+            # Look for existing question by topic and text
             existing = Question.query.filter_by(topic_id=t.id, text=item["text"]).first()
             if existing:
-                # Update options and Kannada fields to ensure full fidelity
                 existing.option_a = item["option_a"]
                 existing.option_b = item["option_b"]
                 existing.option_c = item["option_c"]
@@ -290,34 +218,66 @@ def insert_new_questions():
                 existing.option_e_kn = item["option_e_kn"]
                 existing.explanation_kn = item["explanation_kn"]
                 existing.subtopic_kn = item["subtopic_kn"]
-                continue
-
-            new_q = Question(
-                topic_id=t.id,
-                text=item["text"],
-                option_a=item["option_a"],
-                option_b=item["option_b"],
-                option_c=item["option_c"],
-                option_d=item["option_d"],
-                option_e=item["option_e"],
-                correct_option=item["correct_option"],
-                difficulty=item["difficulty"],
-                subtopic=item["subtopic"],
-                explanation=item["explanation"],
-                text_kn=item["text_kn"],
-                option_a_kn=item["option_a_kn"],
-                option_b_kn=item["option_b_kn"],
-                option_c_kn=item["option_c_kn"],
-                option_d_kn=item["option_d_kn"],
-                option_e_kn=item["option_e_kn"],
-                explanation_kn=item["explanation_kn"],
-                subtopic_kn=item["subtopic_kn"]
-            )
-            db.session.add(new_q)
-            inserted_count += 1
+                existing.text_hi = item["text_hi"]
+                existing.option_a_hi = item["option_a_hi"]
+                existing.option_b_hi = item["option_b_hi"]
+                existing.option_c_hi = item["option_c_hi"]
+                existing.option_d_hi = item["option_d_hi"]
+                existing.option_e_hi = item["option_e_hi"]
+                existing.explanation_hi = item["explanation_hi"]
+                existing.subtopic_hi = item["subtopic_hi"]
+                updated_count += 1
+            else:
+                new_q = Question(
+                    topic_id=t.id,
+                    text=item["text"],
+                    option_a=item["option_a"],
+                    option_b=item["option_b"],
+                    option_c=item["option_c"],
+                    option_d=item["option_d"],
+                    option_e=item["option_e"],
+                    correct_option=item["correct_option"],
+                    difficulty=item["difficulty"],
+                    subtopic=item["subtopic"],
+                    explanation=item["explanation"],
+                    text_kn=item["text_kn"],
+                    option_a_kn=item["option_a_kn"],
+                    option_b_kn=item["option_b_kn"],
+                    option_c_kn=item["option_c_kn"],
+                    option_d_kn=item["option_d_kn"],
+                    option_e_kn=item["option_e_kn"],
+                    explanation_kn=item["explanation_kn"],
+                    subtopic_kn=item["subtopic_kn"],
+                    text_hi=item["text_hi"],
+                    option_a_hi=item["option_a_hi"],
+                    option_b_hi=item["option_b_hi"],
+                    option_c_hi=item["option_c_hi"],
+                    option_d_hi=item["option_d_hi"],
+                    option_e_hi=item["option_e_hi"],
+                    explanation_hi=item["explanation_hi"],
+                    subtopic_hi=item["subtopic_hi"]
+                )
+                db.session.add(new_q)
+                inserted_count += 1
 
         db.session.commit()
-        print(f"Successfully inserted {inserted_count} new 5-option VTU questions.")
+        print(f"Question sync complete: {updated_count} updated, {inserted_count} inserted.", flush=True)
+
+        # Purge obsolete placeholder questions
+        obsolete_qs = Question.query.filter(
+            (Question.text_hi.is_(None)) | (Question.text_kn.like("%(ಕನ್ನಡ ರೂಪಾಂತರ)%"))
+        ).all()
+        obsolete_count = len(obsolete_qs)
+        for oq in obsolete_qs:
+            db.session.delete(oq)
+        db.session.commit()
+        print(f"Purged {obsolete_count} obsolete questions with placeholder text.", flush=True)
+
+        # Audit check: verify that NO question has placeholder tags
+        bad_kn = Question.query.filter(Question.text_kn.like("%(ಕನ್ನಡ ರೂಪಾಂತರ)%")).count()
+        bad_hi = Question.query.filter(Question.text_hi.like("%(हिंदी अनुवाद)%")).count()
+        total_remaining = Question.query.count()
+        print(f"Post-purge audit: {total_remaining} total questions. Placeholders: {bad_kn} kn, {bad_hi} hi.", flush=True)
 
 
 def print_summary():
@@ -340,7 +300,7 @@ def print_summary():
 
 if __name__ == '__main__':
     print("Starting Bilingual Curriculum population...", flush=True)
+    run_schema_migration()
     populate_bilingual_resources()
-    upgrade_existing_questions()
-    insert_new_questions()
+    sync_clean_multilingual_questions()
     print_summary()

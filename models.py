@@ -95,46 +95,73 @@ class Question(BaseModel):
     explanation_kn = db.Column(db.Text, nullable=True)
     subtopic_kn = db.Column(db.String(100), nullable=True)
 
+    # Hindi parallel content fields
+    text_hi = db.Column(db.Text, nullable=True)
+    option_a_hi = db.Column(db.Text, nullable=True)
+    option_b_hi = db.Column(db.Text, nullable=True)
+    option_c_hi = db.Column(db.Text, nullable=True)
+    option_d_hi = db.Column(db.Text, nullable=True)
+    option_e_hi = db.Column(db.Text, nullable=True)
+    explanation_hi = db.Column(db.Text, nullable=True)
+    subtopic_hi = db.Column(db.String(100), nullable=True)
+
     @property
     def correct_index(self) -> int:
         mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
         return mapping.get((self.correct_option or 'A').strip().upper(), 0)
 
     def to_dict(self, lang='en', include_answer=False):
-        is_kn = (lang == 'kn')
-        opt_e_val = self.option_e_kn if is_kn and self.option_e_kn else self.option_e
-        if not opt_e_val:
-            opt_e_val = "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ" if is_kn else "None of the above"
+        if lang == 'kn':
+            text = self.text_kn if self.text_kn else self.text
+            opt_a = self.option_a_kn if self.option_a_kn else self.option_a
+            opt_b = self.option_b_kn if self.option_b_kn else self.option_b
+            opt_c = self.option_c_kn if self.option_c_kn else self.option_c
+            opt_d = self.option_d_kn if self.option_d_kn else self.option_d
+            opt_e = self.option_e_kn if self.option_e_kn else (self.option_e or "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ")
+            subtopic = self.subtopic_kn if self.subtopic_kn else self.subtopic
+            explanation = self.explanation_kn if self.explanation_kn else self.explanation
+        elif lang == 'hi':
+            text = self.text_hi if self.text_hi else self.text
+            opt_a = self.option_a_hi if self.option_a_hi else self.option_a
+            opt_b = self.option_b_hi if self.option_b_hi else self.option_b
+            opt_c = self.option_c_hi if self.option_c_hi else self.option_c
+            opt_d = self.option_d_hi if self.option_d_hi else self.option_d
+            opt_e = self.option_e_hi if self.option_e_hi else (self.option_e or "उपरोक्त में से कोई नहीं")
+            subtopic = self.subtopic_hi if self.subtopic_hi else self.subtopic
+            explanation = self.explanation_hi if self.explanation_hi else self.explanation
+        else:
+            text = self.text
+            opt_a = self.option_a
+            opt_b = self.option_b
+            opt_c = self.option_c
+            opt_d = self.option_d
+            opt_e = self.option_e or "None of the above"
+            subtopic = self.subtopic
+            explanation = self.explanation
 
         options_dict = {
-            'A': (self.option_a_kn if is_kn and self.option_a_kn else self.option_a),
-            'B': (self.option_b_kn if is_kn and self.option_b_kn else self.option_b),
-            'C': (self.option_c_kn if is_kn and self.option_c_kn else self.option_c),
-            'D': (self.option_d_kn if is_kn and self.option_d_kn else self.option_d),
-            'E': opt_e_val
+            'A': opt_a,
+            'B': opt_b,
+            'C': opt_c,
+            'D': opt_d,
+            'E': opt_e
         }
 
-        options_list = [
-            options_dict['A'],
-            options_dict['B'],
-            options_dict['C'],
-            options_dict['D'],
-            options_dict['E']
-        ]
+        options_list = [opt_a, opt_b, opt_c, opt_d, opt_e]
 
         data = {
             'id': self.id,
             'topic_id': self.topic_id,
-            'text': (self.text_kn if is_kn and self.text_kn else self.text),
+            'text': text,
             'options': options_dict,
             'options_list': options_list,
             'difficulty': self.difficulty,
-            'subtopic': (self.subtopic_kn if is_kn and self.subtopic_kn else self.subtopic),
+            'subtopic': subtopic,
             'correct_index': self.correct_index,
         }
         if include_answer:
             data['correct_option'] = self.correct_option
-            data['explanation'] = (self.explanation_kn if is_kn and self.explanation_kn else self.explanation)
+            data['explanation'] = explanation
         return data
 
 
@@ -195,26 +222,40 @@ class Resource(BaseModel):
     content_kn = db.Column(db.Text, nullable=True)
     url_kn = db.Column(db.String(500), nullable=True)
 
+    # Hindi parallel content and localized video streaming
+    title_hi = db.Column(db.String(250), nullable=True)
+    description_hi = db.Column(db.Text, nullable=True)
+    content_hi = db.Column(db.Text, nullable=True)
+    url_hi = db.Column(db.String(500), nullable=True)
+
     views = db.relationship('ResourceView', backref='resource', lazy=True, cascade='all, delete-orphan')
 
     def get_title(self, lang='en') -> str:
         if lang == 'kn' and self.title_kn:
             return self.title_kn
+        elif lang == 'hi' and self.title_hi:
+            return self.title_hi
         return self.title
 
     def get_description(self, lang='en') -> str:
         if lang == 'kn' and self.description_kn:
             return self.description_kn
+        elif lang == 'hi' and self.description_hi:
+            return self.description_hi
         return self.description
 
     def get_content(self, lang='en') -> str:
         if lang == 'kn' and self.content_kn:
             return self.content_kn
+        elif lang == 'hi' and self.content_hi:
+            return self.content_hi
         return self.content or ''
 
     def get_url(self, lang='en') -> str:
         if lang == 'kn' and self.url_kn:
             return self.url_kn
+        elif lang == 'hi' and self.url_hi:
+            return self.url_hi
         return self.url or ''
 
 
