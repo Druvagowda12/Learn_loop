@@ -1,30 +1,46 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ resource.title }} · Learnloop{% endblock %}
+{% block title %}{{ resource.get_title(user_lang) }} · Learnloop{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10">
 
-  <!-- Breadcrumbs & Meta -->
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+  <!-- Breadcrumbs & Language Switch Bar -->
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
     <div class="flex items-center gap-2">
-      <a href="{{ url_for('resources') }}" class="hover:text-[#1a6b5f]">Repository</a>
+      <a href="{{ url_for('resources') }}" class="hover:text-[#1a6b5f]">
+        {% if user_lang == 'kn' %}ಸಂಪನ್ಮೂಲ ಭಂಡಾರ{% else %}Repository{% endif %}
+      </a>
       <span>/</span>
-      <span class="text-[#1a6b5f] font-semibold">{{ resource.topic.subject.name }}</span>
+      <span class="text-[#1a6b5f] font-semibold">{{ resource.topic.subject.name|localize }}</span>
       <span>/</span>
-      <span class="text-gray-700">{{ resource.topic.name }}</span>
+      <span class="text-gray-700 font-medium">{{ resource.topic.name|localize }}</span>
     </div>
 
     <div class="flex items-center gap-2">
+      <!-- In-Page Language Selector for Study Notes & Video -->
+      <div class="flex items-center bg-[#ede6da] p-1 rounded-xl border border-[#d8cebe] text-xs">
+        <button type="button" 
+                onclick="switchLanguage('en')" 
+                class="px-2.5 py-1 rounded-lg font-bold transition-all {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+          English
+        </button>
+        <button type="button" 
+                onclick="switchLanguage('kn')" 
+                class="px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+          ಕನ್ನಡ (KN)
+        </button>
+      </div>
+
       <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded
         {% if resource.type == 'notes' %}bg-blue-50 text-blue-700 border border-blue-200
         {% elif resource.type == 'video' %}bg-red-50 text-red-700 border border-red-200
         {% elif resource.type == 'example' %}bg-emerald-50 text-emerald-700 border border-emerald-200
         {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
-        {{ resource.type }}
+        {{ resource.type|localize }}
       </span>
       <span class="capitalize text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-        {{ resource.difficulty }} level
+        {{ resource.difficulty|localize }}
       </span>
     </div>
   </div>
@@ -33,21 +49,107 @@
   <article class="card-learnloop p-6 sm:p-10 border-[#e2dacd] space-y-6">
     
     <header class="border-b border-[#ede6da] pb-6">
-      <span class="eyebrow">Learning Material</span>
-      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1">{{ resource.title }}</h1>
-      <p class="text-sm text-gray-600 mt-2">{{ resource.description }}</p>
+      <div class="flex items-center justify-between mb-2">
+        <span class="eyebrow">
+          {% if user_lang == 'kn' %}ಕಲಿಕಾ ಸಂಪನ್ಮೂಲ{% else %}Learning Material{% endif %}
+        </span>
+        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold {% if user_lang == 'kn' %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
+          {% if user_lang == 'kn' %}ಕನ್ನಡ ಆವೃತ್ತಿ ಸಕ್ರಿಯವಾಗಿದೆ{% else %}English Version Active{% endif %}
+        </span>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1 leading-tight">
+        {{ resource.get_title(user_lang) }}
+      </h1>
+      <p class="text-sm text-gray-600 mt-2 leading-relaxed">
+        {{ resource.get_description(user_lang) }}
+      </p>
     </header>
 
-    <!-- Content Body -->
-    <div class="prose max-w-none text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line space-y-4 font-sans">
-      {{ resource.content or 'No text content available for this resource.' }}
+    {% set active_url = resource.get_url(user_lang) %}
+
+    <!-- Video Player Component (when resource is a video or has video URL) -->
+    {% if resource.type == 'video' or active_url %}
+    <div class="space-y-4 my-6">
+      
+      <!-- Stream Switcher Tabs -->
+      <div class="flex items-center justify-between bg-[#fbf8f1] p-3 rounded-xl border border-[#e2dacd]">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-[#10222c]">
+            {% if user_lang == 'kn' %}ವೀಡಿಯೋ ಸ್ಟ್ರೀಮ್ ಭಾಷೆ:{% else %}Video Stream Language:{% endif %}
+          </span>
+          <div class="flex gap-1.5">
+            <button type="button" 
+                    onclick="switchLanguage('en')"
+                    class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if user_lang != 'kn' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+              EN English Lecture
+            </button>
+            <button type="button" 
+                    onclick="switchLanguage('kn')"
+                    class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if user_lang == 'kn' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+              KN ಕನ್ನಡ ಉಪನ್ಯಾಸ
+            </button>
+          </div>
+        </div>
+
+        <a href="{{ active_url }}" target="_blank" rel="noopener noreferrer" 
+           class="text-xs text-[#1a6b5f] hover:underline font-semibold flex items-center gap-1">
+          <span>YouTube ↗</span>
+        </a>
+      </div>
+
+      <!-- Responsive Embedded Video Player with Dynamic Lang-URL Key -->
+      {% set embed_url = active_url %}
+      {% if 'watch?v=' in active_url %}
+        {% set embed_url = active_url.replace('watch?v=', 'embed/') %}
+      {% endif %}
+
+      <div class="relative w-full rounded-2xl overflow-hidden shadow-lg border border-[#d8cebe] bg-black aspect-video"
+           key="{{ user_lang }}-{{ active_url }}"
+           data-key="{{ user_lang }}-{{ active_url }}"
+           id="video-player-container">
+        {% if 'embed/' in embed_url or 'youtu.be' in embed_url %}
+        <iframe id="video-iframe"
+                key="{{ user_lang }}-{{ active_url }}"
+                class="w-full h-full"
+                src="{{ embed_url }}"
+                title="{{ resource.get_title(user_lang) }}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+        </iframe>
+        {% else %}
+        <div class="w-full h-full flex flex-col items-center justify-center p-6 text-center text-white bg-gradient-to-br from-[#10222c] to-[#1a6b5f]">
+          <svg class="w-16 h-16 text-[#e8a33d] mb-3" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+          </svg>
+          <h3 class="text-lg font-bold mb-2">
+            {% if user_lang == 'kn' %}ವೀಡಿಯೋ ಉಪನ್ಯಾಸ ಹುಡುಕಾಟ ಸ್ಟ್ರೀಮ್ ಲಭ್ಯವಿದೆ{% else %}Curated Video Lecture Stream Available{% endif %}
+          </h3>
+          <p class="text-xs text-gray-200 max-w-md mb-4">
+            {% if user_lang == 'kn' %}ಆಯ್ಕೆಮಾಡಿದ ಕನ್ನಡ ತಾಂತ್ರಿಕ ಉಪನ್ಯಾಸವನ್ನು ನೇರವಾಗಿ YouTube ನಲ್ಲಿ ವೀಕ್ಷಿಸಿ.{% else %}Watch the curated engineering visual demonstration directly on YouTube.{% endif %}
+          </p>
+          <a href="{{ active_url }}" target="_blank" rel="noopener noreferrer" class="btn-primary text-xs font-bold px-5 py-2.5">
+            {% if user_lang == 'kn' %}ಕನ್ನಡ ಉಪನ್ಯಾಸ ತೆರೆಯಿರಿ (YouTube) →{% else %}Launch Video Lecture (YouTube) →{% endif %}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Strict Language-Exclusive Content Body -->
+    <div class="prose max-w-none text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line space-y-4 font-sans border-t border-[#ede6da] pt-6">
+      {{ resource.get_content(user_lang) or 'No text content available for this resource in the selected language.' }}
     </div>
 
     <!-- Action Footer -->
     <footer class="pt-6 border-t border-[#ede6da] flex flex-wrap items-center justify-between gap-4">
       <div class="text-xs text-emerald-700 flex items-center gap-1.5">
         <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-        <span>Reading this resource logged towards your topic progress.</span>
+        <span>
+          {% if user_lang == 'kn' %}ಈ ಸಂಪನ್ಮೂಲವನ್ನು ಓದಿದ್ದೀರಿ. ನಿಮ್ಮ ಪ್ರಗತಿಯಲ್ಲಿ ದಾಖಲಾಗಿದೆ.{% else %}Reading this resource logged towards your topic progress.{% endif %}
+        </span>
       </div>
 
       <div class="flex items-center gap-3">

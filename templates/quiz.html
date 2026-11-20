@@ -2,9 +2,9 @@
 
 {% block title %}
 {% if is_result %}
-Quiz Results & Adaptive Recommendations · {{ topic.name }}
+Quiz Results & Adaptive Recommendations · {{ topic.name|localize }}
 {% else %}
-Adaptive Quiz · {{ topic.name }}
+Adaptive Quiz · {{ topic.name|localize }}
 {% endif %}
 {% endblock %}
 
@@ -24,9 +24,9 @@ Adaptive Quiz · {{ topic.name }}
       <div class="sm:flex sm:items-start sm:justify-between gap-6">
         <div>
           <div class="flex items-center gap-2 mb-2">
-            <span class="eyebrow">{{ topic.subject.name }}</span>
+            <span class="eyebrow">{{ topic.subject.name|localize }}</span>
             <span class="text-gray-300">•</span>
-            <span class="text-xs text-gray-500 font-medium">{{ topic.name }}</span>
+            <span class="text-xs text-gray-500 font-medium">{{ topic.name|localize }}</span>
           </div>
 
           <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c]">
@@ -40,22 +40,24 @@ Adaptive Quiz · {{ topic.name }}
 
         <!-- Score Dial / Pill -->
         <div class="mt-4 sm:mt-0 flex-shrink-0 text-center bg-[#ede6da] p-4 rounded-2xl border border-[#d8cebe]">
-          <span class="text-xs uppercase tracking-wider text-gray-500 font-semibold block">Score</span>
+          <span class="text-xs uppercase tracking-wider text-gray-500 font-semibold block">
+            {% if user_lang == 'kn' %}ಅಂಕ{% else %}Score{% endif %}
+          </span>
           <div class="text-4xl font-serif font-bold text-[#10222c] my-0.5">
             {{ score_pct|round(0)|int }}<span class="text-xl font-sans text-gray-500">%</span>
           </div>
 
           {% if mastery_calc.mastery_level == 'High' %}
           <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-high">
-            High Mastery
+            {% if user_lang == 'kn' %}ಉನ್ನತ ಪ್ರಾವೀಣ್ಯತೆ (High){% else %}High Mastery{% endif %}
           </span>
           {% elif mastery_calc.mastery_level == 'Medium' %}
           <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-medium">
-            Medium Mastery
+            {% if user_lang == 'kn' %}ಮಧ್ಯಮ ಪ್ರಾವೀಣ್ಯತೆ (Medium){% else %}Medium Mastery{% endif %}
           </span>
           {% else %}
           <span class="inline-block px-3 py-0.5 rounded-full text-xs font-bold badge-low">
-            Low Mastery
+            {% if user_lang == 'kn' %}ಕಲಿಕಾ ಸುಧಾರಣೆ ಅಗತ್ಯ (Low){% else %}Low Mastery{% endif %}
           </span>
           {% endif %}
         </div>
@@ -69,8 +71,12 @@ Adaptive Quiz · {{ topic.name }}
             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <strong>Diagnostic Feedback:</strong> A lower score simply reveals specific concept gaps to review first. It
-          does not reflect intelligence or academic standing. Review the study resources below before retrying.
+          <strong>{% if user_lang == 'kn' %}ರಚನಾತ್ಮಕ ಹಿಮ್ಮಾಹಿತಿ:{% else %}Diagnostic Feedback:{% endif %}</strong> 
+          {% if user_lang == 'kn' %}
+          ಕಡಿಮೆ ಅಂಕಗಳು ಕೇವಲ ಪರಿಷ್ಕರಿಸಬೇಕಾದ ನಿರ್ದಿಷ್ಟ ತಾಂತ್ರಿಕ ಪರಿಕಲ್ಪನೆಗಳನ್ನು ಗುರುತಿಸುತ್ತವೆ. ಕೆಳಗಿನ ಕನ್ನಡ ಟಿಪ್ಪಣಿಗಳನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.
+          {% else %}
+          A lower score simply reveals specific concept gaps to review first. It does not reflect academic standing. Review the study resources below before retrying.
+          {% endif %}
         </div>
       </div>
 
@@ -81,9 +87,13 @@ Adaptive Quiz · {{ topic.name }}
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-2.5 h-5 rounded-full bg-[#1a6b5f]"></div>
-          <h2 class="text-lg font-serif font-bold text-[#10222c]">Recommended Learning Materials</h2>
+          <h2 class="text-lg font-serif font-bold text-[#10222c]">
+            {% if user_lang == 'kn' %}ಶಿಫಾರಸು ಮಾಡಲಾದ ಕಲಿಕಾ ಸಾಮಗ್ರಿಗಳು{% else %}Recommended Learning Materials{% endif %}
+          </h2>
         </div>
-        <span class="text-xs text-gray-500">Curated for your mastery level</span>
+        <span class="text-xs text-gray-500">
+          {% if user_lang == 'kn' %}ನಿಮ್ಮ ಪ್ರಾವೀಣ್ಯತೆಗೆ ಅನುಗುಣವಾಗಿ ಸಿದ್ಧಪಡಿಸಲಾಗಿದೆ{% else %}Curated for your mastery level{% endif %}
+        </span>
       </div>
 
       {% if recommended_resources %}
@@ -98,7 +108,7 @@ Adaptive Quiz · {{ topic.name }}
                       {% elif res.type == 'video' %}bg-red-50 text-red-700 border border-red-200
                       {% elif res.type == 'example' %}bg-emerald-50 text-emerald-700 border border-emerald-200
                       {% else %}bg-purple-50 text-purple-700 border border-purple-200{% endif %}">
-                {{ res.type }}
+                {{ res.type|localize }}
               </span>
               {% if res.needs_review %}
               <span
@@ -108,17 +118,17 @@ Adaptive Quiz · {{ topic.name }}
               {% endif %}
             </div>
 
-            <h3 class="font-serif font-bold text-sm text-[#10222c] mb-1.5">{{ res.title }}</h3>
+            <h3 class="font-serif font-bold text-sm text-[#10222c] mb-1.5">{{ res.get_title(user_lang) }}</h3>
             <p class="text-xs text-[#6b7a82] leading-relaxed line-clamp-3 mb-4">
-              {{ res.description }}
+              {{ res.get_description(user_lang) }}
             </p>
           </div>
 
           <div>
-            {% if res.url %}
-            <a href="{{ res.url }}" target="_blank" rel="noopener noreferrer"
+            {% if res.type == 'video' or res.get_url(user_lang) %}
+            <a href="{{ res.get_url(user_lang) }}" target="_blank" rel="noopener noreferrer"
               class="btn-teal text-xs w-full text-center flex items-center justify-center gap-1.5">
-              <span>Open Search Link</span>
+              <span>{% if user_lang == 'kn' %}ವೀಡಿಯೋ ಉಪನ್ಯಾಸ ವೀಕ್ಷಿಸಿ{% else %}Open Video Stream{% endif %}</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -127,7 +137,7 @@ Adaptive Quiz · {{ topic.name }}
             {% else %}
             <a href="{{ url_for('view_resource', resource_id=res.id) }}"
               class="btn-secondary text-xs w-full text-center">
-              Read in App
+              {% if user_lang == 'kn' %}ಟಿಪ್ಪಣಿಗಳನ್ನು ಓದಿ{% else %}Read Notes in App{% endif %}
             </a>
             {% endif %}
           </div>
@@ -150,25 +160,27 @@ Adaptive Quiz · {{ topic.name }}
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          <span>Retry Quiz</span>
+          <span>{% if user_lang == 'kn' %}ಮತ್ತೆ ರಸಪ್ರಶ್ನೆ ತೆಗೆದುಕೊಳ್ಳಿ{% else %}Retry Quiz{% endif %}</span>
         </a>
         <a href="{{ url_for('resources', topic_id=topic.id) }}" class="btn-secondary text-xs font-semibold px-4 py-2">
-          Review Recommendations
+          {% if user_lang == 'kn' %}ಸಂಪನ್ಮೂಲಗಳನ್ನು ವೀಕ್ಷಿಸಿ{% else %}Review Recommendations{% endif %}
         </a>
       </div>
 
       <a href="{{ url_for('dashboard') }}"
         class="text-xs font-semibold text-[#1a6b5f] hover:underline flex items-center gap-1">
-        <span>Go to Learning Dashboard</span>
+        <span>{% if user_lang == 'kn' %}ಕಲಿಕಾ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ{% else %}Go to Learning Dashboard{% endif %}</span>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
         </svg>
       </a>
     </div>
 
-    <!-- Question Review Accordion / Detailed Answers -->
+    <!-- Question Review Accordion / Detailed Answers with 5 Options -->
     <div class="mt-8 pt-6 border-t border-[#e2dacd]">
-      <h3 class="font-serif font-bold text-base text-[#10222c] mb-4">Detailed Question Review</h3>
+      <h3 class="font-serif font-bold text-base text-[#10222c] mb-4">
+        {% if user_lang == 'kn' %}ಪ್ರಶ್ನಾವಳಿ ವಿವರವಾದ ಪರಾಮರ್ಶೆ (5 ಆಯ್ಕೆಗಳು){% else %}Detailed Question Review (5-Option Architecture){% endif %}
+      </h3>
       <div class="space-y-3">
         {% for item in detailed_answers %}
         <div
@@ -176,7 +188,7 @@ Adaptive Quiz · {{ topic.name }}
           <div class="flex items-start justify-between gap-2 mb-2">
             <span
               class="text-xs font-semibold {% if item.is_correct %}text-emerald-800{% else %}text-red-800{% endif %}">
-              Question {{ loop.index }}: {{ item.text }}
+              {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ{% else %}Question{% endif %} {{ loop.index }}: {{ item.text }}
             </span>
             <span
               class="px-2 py-0.5 rounded text-[10px] font-bold {% if item.is_correct %}badge-high{% else %}badge-low{% endif %}">
@@ -184,14 +196,20 @@ Adaptive Quiz · {{ topic.name }}
             </span>
           </div>
           <div class="text-xs text-gray-700 space-y-1">
-            <div>Your answer: <span class="font-mono font-bold">{{ item.chosen_option }}</span> ({{
-              item.options.get(item.chosen_option) }})</div>
+            <div>
+              <strong>{% if user_lang == 'kn' %}ನಿಮ್ಮ ಆಯ್ಕೆ:{% else %}Your answer:{% endif %}</strong> 
+              <span class="font-mono font-bold">{{ item.chosen_option }}</span> 
+              ({{ item.options.get(item.chosen_option) or 'N/A' }})
+            </div>
             {% if not item.is_correct %}
-            <div class="text-emerald-800">Correct answer: <span class="font-mono font-bold">{{ item.correct_option
-                }}</span> ({{ item.options.get(item.correct_option) }})</div>
+            <div class="text-emerald-800 font-medium">
+              <strong>{% if user_lang == 'kn' %}ಸರಿಯಾದ ಉತ್ತರ:{% else %}Correct answer:{% endif %}</strong> 
+              <span class="font-mono font-bold">{{ item.correct_option }}</span> 
+              ({{ item.options.get(item.correct_option) }})
+            </div>
             {% endif %}
             <div class="pt-1.5 text-gray-600 italic border-t border-black/5 mt-1">
-              <strong>Explanation:</strong> {{ item.explanation }}
+              <strong>{% if user_lang == 'kn' %}ವಿವರಣೆ:{% else %}Explanation:{% endif %}</strong> {{ item.explanation }}
             </div>
           </div>
         </div>
@@ -203,42 +221,90 @@ Adaptive Quiz · {{ topic.name }}
 
   {% else %}
   <!-- ================================================================= -->
-  <!-- INTERACTIVE QUIZ TAKING VIEW -->
+  <!-- INTERACTIVE 5-OPTION QUIZ TAKING VIEW WITH LIVE EN/KN & DIFFICULTY SYNC -->
   <!-- ================================================================= -->
   <div class="space-y-6">
 
-    <!-- Quiz Header Card -->
-    <div class="card-learnloop p-6 border-[#e2dacd] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <span class="eyebrow">{{ topic.subject.name }}</span>
-          <span class="text-gray-300">•</span>
-          <span class="text-xs text-gray-500">Adaptive Diagnostic Mode</span>
+    <!-- Quiz Header Card with Synchronized Controls -->
+    <div class="card-learnloop p-6 border-[#e2dacd] space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="eyebrow">{{ topic.subject.name|localize }}</span>
+            <span class="text-gray-300">•</span>
+            <span class="text-xs text-gray-500">
+              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆಯ ರಸಪ್ರಶ್ನೆ (5 ಆಯ್ಕೆಗಳು){% else %}5-Option Adaptive Diagnostic Mode{% endif %}
+            </span>
+          </div>
+          <h1 class="text-xl sm:text-2xl font-serif font-bold text-[#10222c]">{{ topic.name|localize }}</h1>
         </div>
-        <h1 class="text-xl sm:text-2xl font-serif font-bold text-[#10222c]">{{ topic.name }}</h1>
+
+        <!-- In-Quiz Language Switcher (EN <-> KN) -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 font-medium">
+            {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ ಭಾಷೆ:{% else %}Quiz Language:{% endif %}
+          </span>
+          <div class="flex items-center bg-[#ede6da] p-1 rounded-xl border border-[#d8cebe] text-xs shadow-inner">
+            <button type="button" 
+                    onclick="switchLanguage('en')" 
+                    class="px-2.5 py-1 rounded-lg font-bold transition-all {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+              EN
+            </button>
+            <button type="button" 
+                    onclick="switchLanguage('kn')" 
+                    class="px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+              ಕನ್ನಡ
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div class="text-right">
-          <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400 block">Question Mix</span>
-          <span
-            class="text-xs font-semibold text-[#1a6b5f] bg-[#ede6da] px-2.5 py-1 rounded-md border border-[#d8cebe]">
-            {{ difficulty_mix }}
+      <!-- Live Difficulty Tier Switcher -->
+      <div class="pt-3 border-t border-[#ede6da] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-[#10222c] uppercase tracking-wider text-[11px]">
+            {% if user_lang == 'kn' %}ಕಷ್ಟದ ಹಂತ (Tier):{% else %}Difficulty Level:{% endif %}
           </span>
+          <div class="flex flex-wrap gap-1.5">
+            <a href="{{ url_for('take_quiz', topic_id=topic.id) }}" 
+               class="px-3 py-1 rounded-lg border font-semibold transition-all {% if not active_tier %}bg-[#10222c] text-white border-[#10222c] shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border-[#d8cebe]{% endif %}">
+              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆ (Adaptive){% else %}Adaptive (Mix){% endif %}
+            </a>
+            <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='easy') }}" 
+               class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'easy' %}bg-emerald-700 text-white border-emerald-700 shadow-sm{% else %}bg-white text-emerald-800 hover:bg-emerald-50 border-emerald-200{% endif %}">
+              {% if user_lang == 'kn' %}ಸುಲಭ (Easy){% else %}Easy{% endif %}
+            </a>
+            <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='medium') }}" 
+               class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'medium' %}bg-amber-600 text-white border-amber-600 shadow-sm{% else %}bg-white text-amber-800 hover:bg-amber-50 border-amber-200{% endif %}">
+              {% if user_lang == 'kn' %}ಮಧ್ಯಮ (Medium){% else %}Medium{% endif %}
+            </a>
+            <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='hard') }}" 
+               class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'hard' %}bg-rose-700 text-white border-rose-700 shadow-sm{% else %}bg-white text-rose-800 hover:bg-rose-50 border-rose-200{% endif %}">
+              {% if user_lang == 'kn' %}ಕಠಿಣ (Hard){% else %}Hard{% endif %}
+            </a>
+          </div>
         </div>
+
+        <span class="text-xs text-gray-600 bg-[#ede6da] px-2.5 py-1 rounded-md border border-[#d8cebe] font-medium">
+          {{ difficulty_mix }}
+        </span>
       </div>
     </div>
 
     <!-- Stepper / Progress Bar -->
     <div class="bg-[#ede6da] p-3 rounded-xl border border-[#d8cebe] flex items-center justify-between text-xs">
-      <span id="quiz-progress-text" class="font-semibold text-[#10222c]">Question 1 of {{ questions|length }}</span>
+      <span id="quiz-progress-text" class="font-semibold text-[#10222c]">
+        {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ 1 / {{ questions|length }}{% else %}Question 1 of {{ questions|length }}{% endif %}
+      </span>
       <div class="w-1/2 sm:w-2/3 bg-white h-2.5 rounded-full overflow-hidden border border-[#d8cebe]">
         <div id="quiz-progress-bar" class="bg-[#e8a33d] h-full transition-all duration-300" style="width: 20%;"></div>
       </div>
-      <span id="quiz-score-badge" class="font-mono font-bold text-[#1a6b5f]">Answered: 0/{{ questions|length }}</span>
+      <span id="quiz-score-badge" class="font-mono font-bold text-[#1a6b5f]">
+        {% if user_lang == 'kn' %}ಉತ್ತರಿಸಿದ್ದು: 0/{{ questions|length }}{% else %}Answered: 0/{{ questions|length }}{% endif %}
+      </span>
     </div>
 
-    <!-- Main Question Form -->
+    <!-- Main Question Form with 5 Options (A, B, C, D, E) -->
     <form id="quiz-form" method="POST" action="{{ url_for('submit_quiz', topic_id=topic.id) }}">
       <input type="hidden" name="difficulty_mix" value="{{ difficulty_mix }}">
 
@@ -250,47 +316,48 @@ Adaptive Quiz · {{ topic.name }}
         <div class="flex items-start justify-between gap-4">
           <div>
             <span class="text-[11px] font-bold uppercase tracking-wider text-[#1a6b5f]">
-              Subtopic: {{ q.subtopic }}
+              {% if user_lang == 'kn' %}ಉಪವಿಷಯ:{% else %}Subtopic:{% endif %} {{ q.subtopic }}
             </span>
             <h2 class="text-base sm:text-lg font-medium text-[#10222c] mt-1.5 leading-relaxed">
               {{ loop.index }}. {{ q.text }}
             </h2>
           </div>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase 
-                {% if q.difficulty == 'easy' %}bg-green-100 text-green-800
-                {% elif q.difficulty == 'medium' %}bg-yellow-100 text-yellow-800
-                {% else %}bg-red-100 text-red-800{% endif %}">
-            {{ q.difficulty }}
+          <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase 
+                {% if q.difficulty == 'easy' %}bg-green-100 text-green-800 border border-green-200
+                {% elif q.difficulty == 'medium' %}bg-yellow-100 text-yellow-800 border border-yellow-200
+                {% else %}bg-red-100 text-red-800 border border-red-200{% endif %}">
+            {{ q.difficulty|localize }}
           </span>
         </div>
 
-        <!-- 4 Options -->
+        <!-- 5 Options (A through E / Index 0 to 4) -->
         <div class="space-y-2.5">
-          {% for opt_key in ['A', 'B', 'C', 'D'] %}
+          {% for opt_key in ['A', 'B', 'C', 'D', 'E'] %}
           {% set opt_text = q.options.get(opt_key) %}
+          {% if opt_text %}
           <label
             class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-[#e2dacd] bg-white hover:bg-[#fcfbf9] hover:border-[#1a6b5f] cursor-pointer transition-all">
-            <input type="radio" name="q_{{ q.id }}" value="{{ opt_key }}" required onchange="handleOptionChange(this)"
-              class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
+            <input type="radio" 
+                   name="q_{{ q.id }}" 
+                   value="{{ opt_key }}" 
+                   data-index="{{ loop.index0 }}"
+                   required 
+                   onchange="handleOptionChange(this)"
+                   class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
             <div class="flex-1 text-sm text-[#1d2b33]">
-              <span class="font-bold mr-1 text-[#10222c]">{{ opt_key }}.</span>
+              <span class="font-bold mr-1.5 text-[#10222c]">{{ opt_key }}.</span>
               <span>{{ opt_text }}</span>
             </div>
           </label>
+          {% endif %}
           {% endfor %}
-        </div>
-
-        <!-- Instant Feedback Panel (hidden until user selects an option) -->
-        <div id="feedback-panel-{{ loop.index0 }}" class="hidden p-4 rounded-xl border text-xs space-y-1 fade-in">
-          <div class="font-bold flex items-center gap-1.5" id="feedback-title-{{ loop.index0 }}"></div>
-          <div class="text-gray-600" id="feedback-expl-{{ loop.index0 }}"></div>
         </div>
 
         <!-- Navigation Buttons between questions -->
         <div class="flex items-center justify-between pt-4 border-t border-[#ede6da]">
           {% if not loop.first %}
           <button type="button" onclick="prevQuestion()" class="btn-secondary text-xs px-3.5 py-1.5">
-            ← Previous
+            ← {% if user_lang == 'kn' %}ಹಿಂದಿನ ಪ್ರಶ್ನೆ{% else %}Previous{% endif %}
           </button>
           {% else %}
           <div></div>
@@ -298,11 +365,11 @@ Adaptive Quiz · {{ topic.name }}
 
           {% if not loop.last %}
           <button type="button" onclick="nextQuestion()" class="btn-primary text-xs px-4 py-2">
-            Next Question →
+            {% if user_lang == 'kn' %}ಮುಂದಿನ ಪ್ರಶ್ನೆ{% else %}Next Question{% endif %} →
           </button>
           {% else %}
           <button type="submit" id="submit-quiz-btn" class="btn-teal text-xs font-bold px-5 py-2 shadow-sm">
-            Finish & Submit Quiz
+            {% if user_lang == 'kn' %}ರಸಪ್ರಶ್ನೆ ಮುಕ್ತಾಯ ಮತ್ತು ಸಲ್ಲಿಸಿ{% else %}Finish & Submit Quiz{% endif %}
           </button>
           {% endif %}
         </div>
@@ -338,10 +405,10 @@ Adaptive Quiz · {{ topic.name }}
     });
     currentQ = idx;
 
-    // Update progress indicator
     const progText = document.getElementById('quiz-progress-text');
+    const isKn = document.body && document.body.getAttribute('data-user-lang') === 'kn';
     if (progText) {
-      progText.innerText = `Question ${idx + 1} of ${totalQuestions}`;
+      progText.innerText = isKn ? `ಪ್ರಶ್ನೆ ${idx + 1} / ${totalQuestions}` : `Question ${idx + 1} of ${totalQuestions}`;
     }
     const pct = totalQuestions > 0 ? ((idx + 1) / totalQuestions) * 100 : 0;
     const progBar = document.getElementById('quiz-progress-bar');
@@ -370,8 +437,9 @@ Adaptive Quiz · {{ topic.name }}
     const cards = document.querySelectorAll('.quiz-question-card');
     const total = cards.length || totalQuestions;
     const badge = document.getElementById('quiz-score-badge');
+    const isKn = document.body && document.body.getAttribute('data-user-lang') === 'kn';
     if (badge) {
-      badge.innerText = `Answered: ${answeredCount}/${total}`;
+      badge.innerText = isKn ? `ಉತ್ತರಿಸಿದ್ದು: ${answeredCount}/${total}` : `Answered: ${answeredCount}/${total}`;
     }
   }
 

@@ -524,6 +524,7 @@ def take_quiz(topic_id):
         abort(404)
 
     user_id = session['user_id']
+    user_lang = get_current_lang()
 
     # Retrieve topic progress and last attempt to select adaptive difficulty mix
     progress = TopicProgress.query.filter_by(user_id=user_id, topic_id=topic_id).first()
@@ -533,41 +534,84 @@ def take_quiz(topic_id):
     current_mastery = progress.mastery_level if progress else 'Low'
     last_score = last_attempt.score_pct if last_attempt else None
 
-    # Compute next difficulty mix using rule-based engine
-    diff_mix = next_difficulty(current_mastery, last_score)
+    # Check for manual tier override (?difficulty=easy|medium|hard)
+    active_tier = request.args.get('difficulty')
+    if active_tier in ('easy', 'medium', 'hard'):
+        pool = Question.query.filter_by(topic_id=topic_id, difficulty=active_tier).all()
+        if len(pool) >= 5:
+            selected_questions = random.sample(pool, 5)
+        else:
+            selected_questions = list(pool)
+            all_pool = Question.query.filter_by(topic_id=topic_id).all()
+            rem = [q for q in all_pool if q not in selected_questions]
+            selected_questions.extend(random.sample(rem, min(5 - len(selected_questions), len(rem))))
+        diff_mix_label = f"Fixed Tier: {active_tier.capitalize()}"
+    else:
+        active_tier = None
+        # Compute next difficulty mix using rule-based engine
+        diff_mix = next_difficulty(current_mastery, last_score)
 
-    # Fetch pool of questions matching difficulty requirements
-    easy_pool = Question.query.filter_by(topic_id=topic_id, difficulty='easy').all()
-    med_pool = Question.query.filter_by(topic_id=topic_id, difficulty='medium').all()
-    hard_pool = Question.query.filter_by(topic_id=topic_id, difficulty='hard').all()
+        # Fetch pool of questions matching difficulty requirements
+        easy_pool = Question.query.filter_by(topic_id=topic_id, difficulty='easy').all()
+        med_pool = Question.query.filter_by(topic_id=topic_id, difficulty='medium').all()
+        hard_pool = Question.query.filter_by(topic_id=topic_id, difficulty='hard').all()
 
-    selected_questions = []
-    # Pick questions according to mix
-    selected_questions.extend(random.sample(easy_pool, min(diff_mix['easy'], len(easy_pool))))
-    selected_questions.extend(random.sample(med_pool, min(diff_mix['medium'], len(med_pool))))
-    selected_questions.extend(random.sample(hard_pool, min(diff_mix['hard'], len(hard_pool))))
+        selected_questions = []
+        # Pick questions according to mix
+        selected_questions.extend(random.sample(easy_pool, min(diff_mix['easy'], len(easy_pool))))
+        selected_questions.extend(random.sample(med_pool, min(diff_mix['medium'], len(med_pool))))
+        selected_questions.extend(random.sample(hard_pool, min(diff_mix['hard'], len(hard_pool))))
 
-    # If count is less than 5, backfill from remaining pool
-    if len(selected_questions) < 5:
-        all_pool = Question.query.filter_by(topic_id=topic_id).all()
-        remaining = [q for q in all_pool if q not in selected_questions]
-        needed = 5 - len(selected_questions)
-        selected_questions.extend(random.sample(remaining, min(needed, len(remaining))))
+        # If count is less than 5, backfill from remaining pool
+        if len(selected_questions) < 5:
+            all_pool = Question.query.filter_by(topic_id=topic_id).all()
+            remaining = [q for q in all_pool if q not in selected_questions]
+            needed = 5 - len(selected_questions)
+            selected_questions.extend(random.sample(remaining, min(needed, len(remaining))))
+
+        diff_mix_label = f"{diff_mix['easy']} easy, {diff_mix['medium']} medium, {diff_mix['hard']} hard"
 
     random.shuffle(selected_questions)
 
-    # Prepare question payloads (without answers, to ensure secure client delivery)
-    quiz_questions = [q.to_dict(include_answer=False) for q in selected_questions]
-
-    diff_mix_label = f"{diff_mix['easy']} easy, {diff_mix['medium']} medium, {diff_mix['hard']} hard"
+    # Prepare 5-option question payloads in active language (without answers, to ensure secure client delivery)
+    quiz_questions = [q.to_dict(lang=user_lang, include_answer=False) for q in selected_questions]
 
     return render_template(
         'quiz.html',
         topic=topic,
         questions=quiz_questions,
         difficulty_mix=diff_mix_label,
-        current_mastery=current_mastery
+        current_mastery=current_mastery,
+        active_tier=active_tier
     )
+
+
+@app.route('/api/quiz/<int:topic_id>/questions')
+def api_quiz_questions(topic_id):
+    topic = db.session.get(Topic, topic_id)
+    if not topic:
+        return jsonify({'error': 'Topic not found'}), 404
+
+    lang = request.args.get('lang') or get_current_lang()
+    diff = request.args.get('difficulty')
+
+    if diff in ('easy', 'medium', 'hard'):
+        pool = Question.query.filter_by(topic_id=topic_id, difficulty=diff).all()
+    else:
+        pool = Question.query.filter_by(topic_id=topic_id).all()
+
+    if len(pool) > 5:
+        selected = random.sample(pool, 5)
+    else:
+        selected = pool
+
+    return jsonify({
+        'topic_id': topic.id,
+        'topic_name': topic.name,
+        'difficulty': diff or 'adaptive',
+        'lang': lang,
+        'questions': [q.to_dict(lang=lang, include_answer=False) for q in selected]
+    })
 
 
 @app.route('/quiz/<int:topic_id>/submit', methods=['POST'])
@@ -578,12 +622,15 @@ def submit_quiz(topic_id):
         abort(404)
 
     user_id = session['user_id']
+    user_lang = get_current_lang()
     difficulty_mix = request.form.get('difficulty_mix', 'adaptive')
 
-    # Server-side verification of answers
+    # Server-side verification of answers (supports 5 options: A-E and numeric index 0-4)
     results = []
     missed_subtopics = set()
     detailed_answers = []
+
+    opt_index_map = {'0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E'}
 
     # Iterate through submitted question answers
     for key, chosen_opt in request.form.items():
@@ -591,24 +638,39 @@ def submit_quiz(topic_id):
             q_id = int(key.replace('q_', ''))
             question = db.session.get(Question, q_id)
             if question and question.topic_id == topic_id:
-                is_correct = (chosen_opt.strip().upper() == question.correct_option.strip().upper())
+                raw_opt = str(chosen_opt).strip().upper()
+                chosen_letter = opt_index_map.get(raw_opt, raw_opt)
+
+                # Strict validation against correct letter or numeric index
+                is_correct = False
+                if chosen_letter == (question.correct_option or '').strip().upper():
+                    is_correct = True
+                elif raw_opt in ('0', '1', '2', '3', '4') and int(raw_opt) == question.correct_index:
+                    is_correct = True
+
                 results.append({'is_correct': is_correct})
 
                 if not is_correct and question.subtopic:
                     missed_subtopics.add(question.subtopic)
 
+                is_kn = (user_lang == 'kn')
+                opt_e = question.option_e_kn if is_kn and question.option_e_kn else question.option_e
+                if not opt_e:
+                    opt_e = "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ" if is_kn else "None of the above"
+
                 detailed_answers.append({
                     'question_id': question.id,
-                    'text': question.text,
-                    'chosen_option': chosen_opt.upper(),
+                    'text': (question.text_kn if is_kn and question.text_kn else question.text),
+                    'chosen_option': chosen_letter,
                     'correct_option': question.correct_option,
                     'is_correct': is_correct,
-                    'explanation': question.explanation,
+                    'explanation': (question.explanation_kn if is_kn and question.explanation_kn else question.explanation),
                     'options': {
-                        'A': question.option_a,
-                        'B': question.option_b,
-                        'C': question.option_c,
-                        'D': question.option_d
+                        'A': (question.option_a_kn if is_kn and question.option_a_kn else question.option_a),
+                        'B': (question.option_b_kn if is_kn and question.option_b_kn else question.option_b),
+                        'C': (question.option_c_kn if is_kn and question.option_c_kn else question.option_c),
+                        'D': (question.option_d_kn if is_kn and question.option_d_kn else question.option_d),
+                        'E': opt_e
                     }
                 })
 

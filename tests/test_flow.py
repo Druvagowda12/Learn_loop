@@ -17,12 +17,6 @@ from app import app, db
 from models import User, Topic, Question, Attempt, TopicProgress, Resource, ResourceView
 
 
-@pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
-    with app.test_client() as client:
-        yield client
 
 
 def test_landing_page(client):

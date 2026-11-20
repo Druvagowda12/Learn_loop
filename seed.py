@@ -13,6 +13,8 @@ from datetime import datetime, timezone, timedelta
 import random
 from models import db, User, Subject, Topic, Question, Attempt, AttemptAnswer, TopicProgress, Resource, ResourceView
 from engine import topic_mastery
+from scripts.bilingual_resources_data import TOPIC_RESOURCES_KN
+from scripts.bilingual_questions_data import NEW_BILINGUAL_QUESTIONS
 
 def seed_database(app):
     with app.app_context():
@@ -67,7 +69,9 @@ def seed_database(app):
             topic_objects[name] = t
 
         # Helper to add questions
-        def add_q(t_name, text, a, b, c, d, correct, diff, subtopic, expl):
+        def add_q(t_name, text, a, b, c, d, correct, diff, subtopic, expl, e=None,
+                  text_kn=None, a_kn=None, b_kn=None, c_kn=None, d_kn=None, e_kn=None,
+                  expl_kn=None, subtopic_kn=None):
             q = Question(
                 topic_id=topic_objects[t_name].id,
                 text=text,
@@ -75,10 +79,19 @@ def seed_database(app):
                 option_b=b,
                 option_c=c,
                 option_d=d,
+                option_e=e or ("None of the above" if correct in ('A', 'B', 'C', 'D') else "All of the above"),
                 correct_option=correct,
                 difficulty=diff,
                 subtopic=subtopic,
-                explanation=expl
+                explanation=expl,
+                text_kn=text_kn or f"{text} (ಕನ್ನಡ ರೂಪಾಂತರ)",
+                option_a_kn=a_kn or a,
+                option_b_kn=b_kn or b,
+                option_c_kn=c_kn or c,
+                option_d_kn=d_kn or d,
+                option_e_kn=e_kn or (e or "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ"),
+                explanation_kn=expl_kn or f"ವಿವರಣೆ: {expl}",
+                subtopic_kn=subtopic_kn or subtopic
             )
             db.session.add(q)
 
@@ -647,14 +660,18 @@ def seed_database(app):
         # ---------------------------------------------------------
         # 3. Create Resources (at least 3-4 per topic, covering notes, video, example, practice)
         # ---------------------------------------------------------
-        print("Seeding curated study resources for all 14 topics...")
+        print("Seeding curated study resources for all 14 topics with English & Kannada support...")
         for name, topic_obj in topic_objects.items():
+            kn_data = TOPIC_RESOURCES_KN.get(name, {})
             # 1. Notes (Short original high-yield summary)
+            notes_kn = kn_data.get('notes', {})
             res_notes = Resource(
                 topic_id=topic_obj.id,
                 type="notes",
                 title=f"Core Concept Summary: {name}",
+                title_kn=notes_kn.get('title_kn', f"ಮುಖ್ಯ ಪರಿಕಲ್ಪನೆಗಳ ಸಾರಾಂಶ: {name}"),
                 description=f"Concise engineering lecture notes covering fundamental principles, key definitions, and VTU exam highlights for {name}.",
+                description_kn=notes_kn.get('desc_kn', f"{name} ವಿಷಯದ ಕುರಿತು VTU ಪರೀಕ್ಷಾ ಸಾರಾಂಶ ಮತ್ತು ಪ್ರಮುಖ ವ್ಯಾಖ್ಯಾನಗಳು."),
                 url=None,
                 content=(
                     f"# Study Notes: {name}\n\n"
@@ -670,6 +687,7 @@ def seed_database(app):
                     f"- Double-check sign conventions and reference node selections.\n\n"
                     f"> *Tip: Review this summary and solve the worked numericals before taking your adaptive quiz.*"
                 ),
+                content_kn=notes_kn.get('content_kn'),
                 target_level="low",
                 difficulty="easy",
                 needs_review=False
@@ -704,12 +722,17 @@ def seed_database(app):
                 name,
                 f"https://www.youtube.com/results?search_query=VTU+Engineering+{clean_query}+lecture"
             )
+            video_kn = kn_data.get('video', {})
+            video_kn_url = f"https://www.youtube.com/results?search_query=VTU+{clean_query}+in+Kannada"
             res_video = Resource(
                 topic_id=topic_obj.id,
                 type="video",
                 title=f"Video Lecture: {name} Explained",
+                title_kn=video_kn.get('title_kn', f"ವೀಡಿಯೋ ಉಪನ್ಯಾಸ: {name}"),
                 description=f"Curated engineering video lecture and step-by-step visual demonstration for {name}.",
+                description_kn=video_kn.get('desc_kn', f"ಕನ್ನಡದಲ್ಲಿ {name} ಉಪನ್ಯಾಸ ಮತ್ತು ವಿವರಣೆ."),
                 url=video_url,
+                url_kn=video_kn_url,
                 content=None,
                 target_level="low",
                 difficulty="medium",
@@ -717,11 +740,14 @@ def seed_database(app):
             )
 
             # 3. Worked Example (Step-by-step practical problem)
+            example_kn = kn_data.get('example', {})
             res_example = Resource(
                 topic_id=topic_obj.id,
                 type="example",
                 title=f"Step-by-Step Worked Problem: {name}",
+                title_kn=example_kn.get('title_kn', f"ಹಂತ-ಹಂತದ ಉದಾಹರಣೆ: {name}"),
                 description=f"Fully worked VTU-standard numerical/code example demonstrating application of {name}.",
+                description_kn=example_kn.get('desc_kn', f"{name} ಅನ್ವಯದ ಮಾದರಿ ಲೆಕ್ಕಾಚಾರ."),
                 url=None,
                 content=(
                     f"# Worked Example: {name}\n\n"
@@ -736,17 +762,21 @@ def seed_database(app):
                     f"### Step 3: Final Verified Result\n"
                     f"The computed solution conforms to theoretical limits. Make sure to document final units and boundary checks."
                 ),
+                content_kn=example_kn.get('content_kn'),
                 target_level="medium",
                 difficulty="medium",
                 needs_review=False
             )
 
             # 4. Practice Problem Set
+            practice_kn = kn_data.get('practice', {})
             res_practice = Resource(
                 topic_id=topic_obj.id,
                 type="practice",
                 title=f"Challenge Practice Problem Set: {name}",
+                title_kn=practice_kn.get('title_kn', f"ಸವಾಲಿನ ಅಭ್ಯಾಸ ಪ್ರಶ್ನೆಗಳು: {name}"),
                 description=f"Higher-order thinking questions and exam-style problem scenarios for {name}.",
+                description_kn=practice_kn.get('desc_kn', f"{name} ಪರೀಕ್ಷಾ ಮಾದರಿಯ ಪ್ರಶ್ನೆಗಳು."),
                 url=None,
                 content=(
                     f"# Practice Exercises: {name}\n\n"
@@ -754,12 +784,41 @@ def seed_database(app):
                     f"2. **Numerical Problem:** Derive the analytical solution given a 20% variation in the boundary conditions.\n\n"
                     f"3. **Synthesis Question:** Design an optimized implementation that minimizes hardware footprint / computational overhead."
                 ),
+                content_kn=practice_kn.get('content_kn'),
                 target_level="high",
                 difficulty="hard",
                 needs_review=False
             )
 
             db.session.add_all([res_notes, res_video, res_example, res_practice])
+
+        # Add expanded 5-option questions
+        print("Seeding expanded 5-option questions across easy, medium, and hard tiers...")
+        for item in NEW_BILINGUAL_QUESTIONS:
+            t_obj = topic_objects.get(item["topic"])
+            if t_obj:
+                new_q = Question(
+                    topic_id=t_obj.id,
+                    text=item["text"],
+                    option_a=item["option_a"],
+                    option_b=item["option_b"],
+                    option_c=item["option_c"],
+                    option_d=item["option_d"],
+                    option_e=item["option_e"],
+                    correct_option=item["correct_option"],
+                    difficulty=item["difficulty"],
+                    subtopic=item["subtopic"],
+                    explanation=item["explanation"],
+                    text_kn=item["text_kn"],
+                    option_a_kn=item["option_a_kn"],
+                    option_b_kn=item["option_b_kn"],
+                    option_c_kn=item["option_c_kn"],
+                    option_d_kn=item["option_d_kn"],
+                    option_e_kn=item["option_e_kn"],
+                    explanation_kn=item["explanation_kn"],
+                    subtopic_kn=item["subtopic_kn"]
+                )
+                db.session.add(new_q)
 
         db.session.flush()
 

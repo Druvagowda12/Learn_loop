@@ -1,0 +1,73 @@
+{
+  "_comment": "Learnloop VTU Engineering Video Mapping Configuration. Update videoUrl_en and videoUrl_kn to customize YouTube streams.",
+  "Arrays in C": {
+    "subject": "C Programming",
+    "videoUrl_en": "https://www.youtube.com/watch?v=AT14lCXuMKI",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=C+Programming+Arrays+in+Kannada+VTU"
+  },
+  "Pointers and Memory": {
+    "subject": "C Programming",
+    "videoUrl_en": "https://www.youtube.com/watch?v=4Rll-_e9-0M",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Pointers+and+Memory+Allocation+in+Kannada+C+Language"
+  },
+  "Functions and Recursion": {
+    "subject": "C Programming",
+    "videoUrl_en": "https://www.youtube.com/watch?v=-NbLKVOK0JQ",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=C+Language+Functions+and+Recursion+in+Kannada"
+  },
+  "Control Flow and Loops": {
+    "subject": "C Programming",
+    "videoUrl_en": "https://www.youtube.com/watch?v=D0ACZ0uU_2g",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=C+Programming+Loops+for+while+in+Kannada"
+  },
+  "Number Systems & Codes": {
+    "subject": "Digital Electronics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=k3Z322T3sjs",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Digital+Electronics+Number+Systems+Binary+Hexadecimal+in+Kannada"
+  },
+  "Boolean Algebra & Logic Simplification": {
+    "subject": "Digital Electronics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=FPrcIhqNPVo",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Boolean+Algebra+Karnaugh+Map+K-Map+in+Kannada+VTU"
+  },
+  "Logic Gates & Universal Realization": {
+    "subject": "Digital Electronics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=kcJAVetOd_A",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Logic+Gates+Universal+NAND+NOR+in+Kannada"
+  },
+  "Combinational Logic Circuits": {
+    "subject": "Digital Electronics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=a3wh7xV5PBU",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Combinational+Circuits+Adder+Subtractor+Multiplexer+in+Kannada"
+  },
+  "Matrices & Linear Systems": {
+    "subject": "Engineering Mathematics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=7a9Yawt1O50",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=VTU+Engineering+Mathematics+Matrices+Eigenvalues+in+Kannada"
+  },
+  "Differential Calculus": {
+    "subject": "Engineering Mathematics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=bTs7ncA_AtY",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=VTU+Engineering+Mathematics+Partial+Differentiation+in+Kannada"
+  },
+  "Integral Calculus": {
+    "subject": "Engineering Mathematics",
+    "videoUrl_en": "https://www.youtube.com/watch?v=fXMyLYwBB3s",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=VTU+Engineering+Mathematics+Integral+Calculus+in+Kannada"
+  },
+  "Ohm's & Kirchhoff's Laws": {
+    "subject": "Basic Circuit Analysis",
+    "videoUrl_en": "https://www.youtube.com/watch?v=6F_rmZ1nXFQ",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Basic+Electrical+Ohms+Law+KCL+KVL+in+Kannada+VTU"
+  },
+  "Series-Parallel Circuit Analysis": {
+    "subject": "Basic Circuit Analysis",
+    "videoUrl_en": "https://www.youtube.com/watch?v=Gn26z60tTog",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Series+and+Parallel+Circuit+Analysis+in+Kannada"
+  },
+  "Mesh & Nodal Analysis": {
+    "subject": "Basic Circuit Analysis",
+    "videoUrl_en": "https://www.youtube.com/watch?v=D92DjS43-Qw",
+    "videoUrl_kn": "https://www.youtube.com/results?search_query=Mesh+and+Nodal+Analysis+in+Kannada+VTU+Circuit+Theory"
+  }
+}

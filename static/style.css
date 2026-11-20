@@ -1,5 +1,5 @@
 /* Learnloop Design System - VTU ECE Mini Project 2026-27 */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
   --color-navy: #10222c;
@@ -18,6 +18,28 @@
 
   --font-serif: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-kannada: 'Noto Sans Kannada', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* Kannada Native Typography Enhancement */
+html[lang="kn"],
+html[lang="kn"] body,
+body[data-user-lang="kn"],
+[lang="kn"],
+.font-kannada {
+  font-family: var(--font-kannada) !important;
+  line-height: 1.7;
+}
+
+html[lang="kn"] h1,
+html[lang="kn"] h2,
+html[lang="kn"] h3,
+body[data-user-lang="kn"] h1,
+body[data-user-lang="kn"] h2,
+body[data-user-lang="kn"] h3 {
+  font-family: var(--font-kannada) !important;
+  letter-spacing: normal;
+  line-height: 1.45;
 }
 
 body {
