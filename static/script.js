@@ -49,9 +49,6 @@ function toggleChatDrawer() {
       appendChatMessage('assistant', GREETINGS[chatLanguage]);
     }
 
-    // Refresh AI badge state based on stored key
-    updateAiBadge(!!getUserApiKey());
-
     const input = document.getElementById('chat-input');
     if (input) setTimeout(() => input.focus(), 150);
   } else {
@@ -86,72 +83,6 @@ function setChatLanguage(lang) {
 
   // Add system note in stream about language change
   appendChatMessage('system', `Language set to ${lang === 'hi' ? 'हिन्दी' : (lang === 'kn' ? 'ಕನ್ನಡ' : 'English')}`);
-}
-
-// ----------------------------------------------------------------------------
-// API Key Management Functions
-// ----------------------------------------------------------------------------
-function toggleApiKeyPanel() {
-  const panel = document.getElementById('ai-key-panel');
-  if (!panel) return;
-  panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) {
-    const input = document.getElementById('user-ai-key-input');
-    if (input) {
-      input.value = getUserApiKey() || '';
-      input.focus();
-    }
-  }
-}
-
-function getUserApiKey() {
-  return localStorage.getItem('learnloop_ai_api_key') || '';
-}
-
-function saveUserApiKey() {
-  const input = document.getElementById('user-ai-key-input');
-  const statusMsg = document.getElementById('api-key-status-msg');
-  if (!input) return;
-  const val = input.value.trim();
-  if (val) {
-    localStorage.setItem('learnloop_ai_api_key', val);
-    if (statusMsg) {
-      statusMsg.innerText = "✓ AI API Key saved! Generative AI enabled.";
-      statusMsg.className = "text-[10px] text-emerald-700 font-semibold mt-1.5";
-      statusMsg.classList.remove('hidden');
-    }
-    updateAiBadge(true);
-    setTimeout(() => {
-      toggleApiKeyPanel();
-    }, 1200);
-  } else {
-    clearUserApiKey();
-  }
-}
-
-function clearUserApiKey() {
-  localStorage.removeItem('learnloop_ai_api_key');
-  const input = document.getElementById('user-ai-key-input');
-  const statusMsg = document.getElementById('api-key-status-msg');
-  if (input) input.value = '';
-  if (statusMsg) {
-    statusMsg.innerText = "API Key removed. Active: Built-in engineering engine.";
-    statusMsg.className = "text-[10px] text-gray-500 font-semibold mt-1.5";
-    statusMsg.classList.remove('hidden');
-  }
-  updateAiBadge(false);
-}
-
-function updateAiBadge(hasKey) {
-  const badge = document.getElementById('ai-status-badge');
-  if (!badge) return;
-  if (hasKey) {
-    badge.innerText = "✨ Generative AI Active";
-    badge.className = "px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-400 text-[#10222c] shadow-sm";
-  } else {
-    badge.innerText = "AI Integrated";
-    badge.className = "px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/50";
-  }
 }
 
 // ----------------------------------------------------------------------------
@@ -243,14 +174,12 @@ async function handleChatSubmit(event) {
   container.scrollTop = container.scrollHeight;
 
   try {
-    const apiKey = getUserApiKey();
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: query,
-        lang: chatLanguage,
-        api_key: apiKey
+        lang: chatLanguage
       })
     });
 
