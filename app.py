@@ -9,8 +9,30 @@ import os
 import random
 import json
 import sys
+import socket
+import urllib.request
 from datetime import datetime, timezone
 from functools import wraps
+
+# Campus/LAN DNS fallback resolver for Neon cloud connections
+_orig_getaddrinfo = socket.getaddrinfo
+def _safe_neon_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    try:
+        return _orig_getaddrinfo(host, port, family, type, proto, flags)
+    except socket.gaierror:
+        if 'neon.tech' in host:
+            try:
+                url = f"https://dns.google/resolve?name={host}&type=A"
+                req = urllib.request.urlopen(url, timeout=3)
+                data = json.loads(req.read().decode())
+                ips = [a['data'] for a in data.get('Answer', []) if a.get('type') == 1]
+                if ips:
+                    p = int(port or 5432)
+                    return [(socket.AF_INET, socket.SOCK_STREAM, 6, '', (ip, p)) for ip in ips]
+            except Exception:
+                pass
+        raise
+socket.getaddrinfo = _safe_neon_getaddrinfo
 
 from dotenv import load_dotenv
 load_dotenv()  # Load variables from .env into os.environ (no-op if file absent)
