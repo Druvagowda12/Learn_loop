@@ -44,21 +44,33 @@ _answers_cache = None
 
 
 def load_env_file() -> None:
-    """Loads key-value pairs from .env file into os.environ if present."""
-    env_path = os.path.join(os.path.dirname(__file__), '.env')
-    if os.path.exists(env_path):
-        try:
-            with open(env_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        k, v = line.split('=', 1)
-                        k = k.strip()
-                        v = v.strip().strip('"').strip("'")
-                        if k and not os.environ.get(k):
-                            os.environ[k] = v
-        except Exception:
-            pass
+    """Loads key-value pairs from .env file into os.environ if present, checking current and parent directories."""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    env_paths = [
+        os.path.join(current_dir, '.env'),
+        os.path.join(parent_dir, '.env'),
+        os.path.join(os.getcwd(), '.env')
+    ]
+    seen = set()
+    for env_path in env_paths:
+        norm = os.path.normpath(env_path)
+        if norm in seen:
+            continue
+        seen.add(norm)
+        if os.path.exists(norm):
+            try:
+                with open(norm, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            k, v = line.split('=', 1)
+                            k = k.strip()
+                            v = v.strip().strip('"').strip("'")
+                            if k and not os.environ.get(k):
+                                os.environ[k] = v
+            except Exception:
+                pass
 
 
 load_env_file()
@@ -66,6 +78,8 @@ load_env_file()
 
 def get_configured_api_key(passed_key: Optional[str] = None) -> Optional[str]:
     """Retrieves API key from parameter or environment variables."""
+    if os.environ.get('TESTING') == '1':
+        return None
     if passed_key and passed_key.strip():
         return passed_key.strip()
     return (
@@ -112,8 +126,14 @@ def tokenize_clean(text: str) -> set:
 # Generative AI Integrations (Gemini & OpenAI)
 # =============================================================================
 
-def call_gemini_api(query: str, lang: str, api_key: str) -> Optional[str]:
-    """Calls Google Gemini Generative AI REST API."""
+def call_gemini_api(query: str, lang: str, api_key: str):
+    """
+    Calls Google Gemini Generative AI REST API.
+    Uses gemini-2.5-flash (with gemini-2.0-flash fallback).
+    Properly accesses candidates[0]['content']['parts'][0]['text'].
+    Prints the exact HTTP status code and error message to the server console if Gemini returns an error.
+    Returns (response_text, None) on success or (None, error_detail) on failure.
+    """
     lang_name = 'Kannada' if lang == 'kn' else ('Hindi' if lang == 'hi' else 'English')
     system_prompt = (
         f"You are Learnloop AI, an expert, encouraging academic assistant for engineering students (VTU Belagavi). "
@@ -123,9 +143,8 @@ def call_gemini_api(query: str, lang: str, api_key: str) -> Optional[str]:
     )
 
     models_to_try = [
-        "gemini-1.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-pro"
+        "gemini-2.5-flash",
+        "gemini-2.0-flash"
     ]
 
     headers = {'Content-Type': 'application/json'}
@@ -143,25 +162,39 @@ def call_gemini_api(query: str, lang: str, api_key: str) -> Optional[str]:
         }
     }
     data_bytes = json.dumps(payload).encode('utf-8')
+    last_error_detail = None
 
     for model in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         try:
             req = urllib.request.Request(url, data=data_bytes, headers=headers, method='POST')
-            with urllib.request.urlopen(req, timeout=9) as resp:
+            with urllib.request.urlopen(req, timeout=12) as resp:
                 res_json = json.loads(resp.read().decode('utf-8'))
                 candidates = res_json.get('candidates', [])
                 if candidates:
-                    parts = candidates[0].get('content', {}).get('parts', [])
+                    content = candidates[0].get('content', {})
+                    parts = content.get('parts', [])
                     if parts and 'text' in parts[0]:
-                        return parts[0]['text'].strip()
-        except Exception:
-            continue
-    return None
+                        return parts[0]['text'].strip(), None
+                    elif 'text' in candidates[0]:
+                        return candidates[0]['text'].strip(), None
+        except urllib.error.HTTPError as e:
+            err_body = ""
+            try:
+                err_body = e.read().decode('utf-8')
+            except Exception:
+                pass
+            print(f"[Gemini API Error] HTTP {e.code} on model '{model}': {err_body}", flush=True)
+            last_error_detail = f"HTTP {e.code} ({model}): {err_body}"
+        except Exception as e:
+            print(f"[Gemini API Error] Exception on model '{model}': {str(e)}", flush=True)
+            last_error_detail = f"Error ({model}): {str(e)}"
+
+    return None, last_error_detail
 
 
-def call_openai_api(query: str, lang: str, api_key: str) -> Optional[str]:
-    """Calls OpenAI Chat Completions API."""
+def call_openai_api(query: str, lang: str, api_key: str):
+    """Calls OpenAI Chat Completions API. Returns (response_text, None) or (None, error_detail)."""
     lang_name = 'Kannada' if lang == 'kn' else ('Hindi' if lang == 'hi' else 'English')
     system_prompt = (
         f"You are Learnloop AI, an expert academic tutor for engineering students at VTU Belagavi. "
@@ -186,14 +219,23 @@ def call_openai_api(query: str, lang: str, api_key: str) -> Optional[str]:
 
     try:
         req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=9) as resp:
+        with urllib.request.urlopen(req, timeout=12) as resp:
             res_json = json.loads(resp.read().decode('utf-8'))
             choices = res_json.get('choices', [])
             if choices:
-                return choices[0].get('message', {}).get('content', '').strip()
-    except Exception:
-        pass
-    return None
+                return choices[0].get('message', {}).get('content', '').strip(), None
+    except urllib.error.HTTPError as e:
+        err_body = ""
+        try:
+            err_body = e.read().decode('utf-8')
+        except Exception:
+            pass
+        print(f"[OpenAI API Error] HTTP {e.code}: {err_body}", flush=True)
+        return None, f"HTTP {e.code}: {err_body}"
+    except Exception as e:
+        print(f"[OpenAI API Error]: {str(e)}", flush=True)
+        return None, str(e)
+    return None, "No response from OpenAI."
 
 
 # =============================================================================
@@ -398,6 +440,33 @@ CONCEPTUAL_TOPICS = [
 ]
 
 
+def format_api_error_message(error_detail: str, provider: str = "Google Gemini") -> str:
+    """Formats an API failure into a clear, helpful message for the chat UI."""
+    detail_lower = (error_detail or '').lower()
+
+    if "400" in error_detail or "api_key_invalid" in detail_lower or "not valid" in detail_lower:
+        category = "Invalid API Key"
+        advice = "The provided API key is invalid or unauthorized. Please verify your GEMINI_API_KEY."
+    elif "429" in error_detail or "resource_exhausted" in detail_lower or "quota" in detail_lower:
+        category = "Quota Limit Exceeded"
+        advice = "Your API key has exceeded its rate limit or free tier quota. Please check your Google AI Studio quota or try again later."
+    elif "404" in error_detail or "not_found" in detail_lower or "no longer available" in detail_lower:
+        category = "Model Deprecated or Not Found"
+        advice = "The Gemini model requested is no longer available or not supported for this account. Please update to a supported model."
+    elif "403" in error_detail or "permission_denied" in detail_lower:
+        category = "Permission Denied"
+        advice = "Your API key does not have permission to access the Gemini API. Ensure the Generative Language API is enabled."
+    else:
+        category = "API Error"
+        advice = "An error occurred while contacting the AI service."
+
+    return (
+        f"⚠️ **{provider} Error ({category})**\n\n"
+        f"{advice}\n\n"
+        f"**Server Response:**\n```\n{error_detail}\n```"
+    )
+
+
 def answer_query(query: str, requested_lang: str = 'en', api_key: Optional[str] = None) -> Dict[str, Any]:
     """
     Finds the best answer for the student query.
@@ -429,11 +498,12 @@ def answer_query(query: str, requested_lang: str = 'en', api_key: Optional[str] 
     # -------------------------------------------------------------------------
     active_key = get_configured_api_key(api_key)
     if active_key:
-        ai_response = None
         if active_key.startswith('sk-'):
-            ai_response = call_openai_api(clean_q, effective_lang, active_key)
+            ai_response, api_error = call_openai_api(clean_q, effective_lang, active_key)
+            provider = "OpenAI"
         else:
-            ai_response = call_gemini_api(clean_q, effective_lang, active_key)
+            ai_response, api_error = call_gemini_api(clean_q, effective_lang, active_key)
+            provider = "Google Gemini"
 
         if ai_response:
             return {
@@ -442,6 +512,36 @@ def answer_query(query: str, requested_lang: str = 'en', api_key: Optional[str] 
                 'lang': effective_lang,
                 'confidence': 1.0,
                 'source': 'generative_ai'
+            }
+        elif api_error:
+            # Return specific error message to the chat UI
+            formatted_error = format_api_error_message(api_error, provider=provider)
+            return {
+                'answer': formatted_error,
+                'matched': False,
+                'lang': effective_lang,
+                'confidence': 0.0,
+                'source': 'api_error',
+                'error': api_error
+            }
+    elif not active_key and os.environ.get('TESTING') != '1':
+        # If no key is configured outside testing mode and this is not a basic greeting
+        greeting_patterns = [
+            r'\b(hi|hello|hey|namaste|vanakkam|namaskara|hola|good\s+morning|good\s+afternoon|good\s+evening)\b',
+            r'^(who\s+are\s+you|what\s+can\s+you\s+do|help|help\s+me)\b'
+        ]
+        is_greeting = any(re.search(pat, lower_query) for pat in greeting_patterns) and len(lower_query.split()) <= 6
+        if not is_greeting:
+            return {
+                'answer': (
+                    "⚠️ **Google Gemini Error (Missing API Key)**\n\n"
+                    "No API key was detected. Please configure `GEMINI_API_KEY` in your `.env` file or environment variables to enable live AI responses."
+                ),
+                'matched': False,
+                'lang': effective_lang,
+                'confidence': 0.0,
+                'source': 'api_error',
+                'error': 'Missing GEMINI_API_KEY'
             }
 
     # -------------------------------------------------------------------------

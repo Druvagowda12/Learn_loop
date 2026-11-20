@@ -979,7 +979,9 @@ def api_chat():
     data = request.get_json() or {}
     query_text = data.get('message', '').strip()
     requested_lang = data.get('lang', session.get('preferred_language', 'en'))
-    api_key = data.get('api_key') or request.headers.get('X-AI-API-Key') or session.get('ai_api_key') or os.environ.get('GEMINI_API_KEY') or os.environ.get('AI_API_KEY') or os.environ.get('OPENAI_API_KEY')
+    api_key = data.get('api_key') or request.headers.get('X-AI-API-Key') or session.get('ai_api_key')
+    if not api_key and not app.config.get('TESTING') and os.environ.get('TESTING') != '1':
+        api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('AI_API_KEY') or os.environ.get('OPENAI_API_KEY')
 
     result = answer_query(query_text, requested_lang=requested_lang, api_key=api_key)
 

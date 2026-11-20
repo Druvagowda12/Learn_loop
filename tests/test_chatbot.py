@@ -3,7 +3,7 @@ Unit tests for Learnloop Multilingual Chatbot (chatbot.py)
 """
 
 import pytest
-from chatbot import answer_query, detect_script_language, FALLBACK_MESSAGES
+from chatbot import answer_query, detect_script_language, FALLBACK_MESSAGES, format_api_error_message, load_env_file
 
 
 def test_script_detection():
@@ -54,3 +54,30 @@ def test_unmatched_hindi_fallback():
     assert res['matched'] is False
     assert res['lang'] == 'hi'
     assert "शिक्षक" in res['answer']
+
+
+def test_format_api_error_message():
+    # 400 Invalid key
+    msg_400 = format_api_error_message("HTTP 400: API_KEY_INVALID", provider="Google Gemini")
+    assert "Invalid API Key" in msg_400
+    assert "⚠️" in msg_400
+
+    # 429 Quota
+    msg_429 = format_api_error_message("HTTP 429: RESOURCE_EXHAUSTED", provider="Google Gemini")
+    assert "Quota Limit Exceeded" in msg_429
+
+    # 404 Deprecated / Not found
+    msg_404 = format_api_error_message("HTTP 404: model no longer available", provider="Google Gemini")
+    assert "Model Deprecated or Not Found" in msg_404
+
+
+def test_api_error_returned_to_chat_ui(monkeypatch):
+    monkeypatch.setattr('chatbot.call_gemini_api', lambda q, lang, key: (None, "HTTP 404: model deprecated"))
+    monkeypatch.setattr('chatbot.get_configured_api_key', lambda passed_key: "test_key_abc")
+
+    res = answer_query("Explain pointers", requested_lang="en")
+    assert res['matched'] is False
+    assert res['source'] == 'api_error'
+    assert "⚠️" in res['answer']
+    assert "Model Deprecated or Not Found" in res['answer']
+
