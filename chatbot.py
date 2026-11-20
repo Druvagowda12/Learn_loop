@@ -129,7 +129,7 @@ def tokenize_clean(text: str) -> set:
 def call_gemini_api(query: str, lang: str, api_key: str):
     """
     Calls Google Gemini Generative AI REST API.
-    Uses gemini-2.5-flash (with gemini-2.0-flash fallback).
+    Uses active models: gemini-3.5-flash-lite, gemini-3-flash-preview, gemini-2.5-flash-lite.
     Properly accesses candidates[0]['content']['parts'][0]['text'].
     Prints the exact HTTP status code and error message to the server console if Gemini returns an error.
     Returns (response_text, None) on success or (None, error_detail) on failure.
@@ -143,8 +143,9 @@ def call_gemini_api(query: str, lang: str, api_key: str):
     )
 
     models_to_try = [
-        "gemini-2.5-flash",
-        "gemini-2.0-flash"
+        "gemini-3.5-flash-lite",
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash-lite"
     ]
 
     headers = {'Content-Type': 'application/json'}

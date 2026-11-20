@@ -91,28 +91,30 @@ function setChatLanguage(lang) {
 function formatMarkdown(text) {
   if (!text) return '';
   let safe = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
   // Code blocks: ```c ... ```
   safe = safe.replace(/```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
-    return `<pre class="bg-[#10222c] text-emerald-300 p-2.5 rounded-xl my-2 overflow-x-auto text-[11px] font-mono leading-relaxed border border-[#213947]"><code>${code.trim()}</code></pre>`;
+    return `<pre class="bg-[#10222c] text-emerald-300 p-2.5 rounded-xl my-2 overflow-x-auto text-[11px] font-mono leading-relaxed border border-[#213947] whitespace-pre"><code>${code.trim()}</code></pre>`;
   });
 
   // Inline code: `code`
-  safe = safe.replace(/`([^`]+)`/g, '<code class="bg-[#ede6da] text-[#10222c] px-1 py-0.5 rounded font-mono text-[11px]">$1</code>');
+  safe = safe.replace(/`([^`]+)`/g, '<code class="bg-[#ede6da] text-[#10222c] px-1 py-0.5 rounded font-mono text-[11px] mx-0.5">$1</code>');
 
   // Bold: **text**
   safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-bold text-[#10222c]">$1</strong>');
 
   // Math expressions: $formula$
-  safe = safe.replace(/\$([^$]+)\$/g, '<span class="font-mono bg-white/70 px-1 rounded text-[#1a6b5f] font-semibold">$1</span>');
+  safe = safe.replace(/\$([^$]+)\$/g, '<span class="font-mono bg-white/70 px-1 rounded text-[#1a6b5f] font-semibold mx-0.5">$1</span>');
 
   // Bullet points
-  safe = safe.replace(/^[•\-\*]\s+(.+)$/gm, '<li class="ml-3.5 list-disc">$1</li>');
+  safe = safe.replace(/^[•\-\*]\s+(.+)$/gm, '<li class="ml-3.5 list-disc my-0.5">$1</li>');
 
-  // Newlines to <br>
+  // Newlines to <br> to preserve line breaks cleanly
   safe = safe.replace(/\n/g, '<br>');
 
   return safe;
@@ -127,10 +129,10 @@ function appendChatMessage(sender, text) {
 
   const bubble = document.createElement('div');
   if (sender === 'user') {
-    bubble.className = 'max-w-[85%] bg-[#10222c] text-white p-3 rounded-2xl rounded-tr-sm text-xs sm:text-sm leading-relaxed shadow-sm';
+    bubble.className = 'chat-bubble chat-bubble-user max-w-[85%] bg-[#10222c] text-white p-3.5 rounded-2xl rounded-tr-sm text-xs sm:text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words';
     bubble.innerText = text;
   } else if (sender === 'assistant') {
-    bubble.className = 'max-w-[85%] bg-[#f6f3ed] border border-[#e2dacd] text-[#1d2b33] p-3 rounded-2xl rounded-tl-sm text-xs sm:text-sm leading-relaxed shadow-sm';
+    bubble.className = 'chat-bubble chat-bubble-assistant max-w-[85%] bg-[#f6f3ed] border border-[#e2dacd] text-[#1d2b33] p-3.5 rounded-2xl rounded-tl-sm text-xs sm:text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words font-sans';
     bubble.innerHTML = formatMarkdown(text);
   } else {
     // system note

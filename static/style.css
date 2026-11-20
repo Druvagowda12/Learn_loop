@@ -276,6 +276,56 @@ h3,
   box-shadow: 0 12px 30px rgba(232, 163, 61, 0.35);
 }
 
+/* Chatbot Message Bubbles & Spacing */
+#chat-messages {
+  word-spacing: normal;
+  letter-spacing: normal;
+}
+
+.chat-bubble {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  word-spacing: normal !important;
+  letter-spacing: normal !important;
+  line-height: 1.6 !important;
+}
+
+.chat-bubble-assistant {
+  font-family: var(--font-sans) !important;
+}
+
+.chat-bubble-assistant strong,
+.chat-bubble-assistant b {
+  display: inline;
+  font-weight: 700;
+  color: #10222c;
+  word-spacing: normal;
+}
+
+.chat-bubble-assistant code {
+  display: inline-block;
+  margin: 0 2px;
+  word-break: break-word;
+}
+
+.chat-bubble-assistant pre {
+  white-space: pre !important;
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.chat-bubble-assistant pre code {
+  white-space: pre !important;
+  display: block;
+  margin: 0;
+}
+
+.chat-bubble-assistant li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
 /* ========================================================================= */
 /* ANIMATIONS SYSTEM                                                         */
 /* ========================================================================= */
