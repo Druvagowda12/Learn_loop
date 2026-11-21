@@ -57,8 +57,8 @@ if os.path.exists(VIDEO_MAPPINGS_FILE):
         VIDEO_MAPPINGS = json.load(f)
 
 def run_schema_migration():
-    """Adds missing columns to questions and resources tables in PostgreSQL and SQLite."""
-    print("Checking and applying schema alterations...")
+    """Adds missing columns to questions and resources tables in PostgreSQL and SQLite if needed."""
+    print("Checking and applying schema alterations...", flush=True)
     with app.app_context():
         engine = db.engine
         is_pg = engine.dialect.name == 'postgresql'
@@ -95,29 +95,21 @@ def run_schema_migration():
         ]
 
         with engine.connect() as conn:
-            # Questions table
-            for col_name, col_type in q_cols:
-                try:
-                    if is_pg:
-                        conn.execute(text(f'ALTER TABLE questions ADD COLUMN IF NOT EXISTS "{col_name}" {col_type};'))
-                    else:
+            if is_pg:
+                res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='questions'"))
+                existing_q_cols = {row[0] for row in res}
+                for col_name, col_type in q_cols:
+                    if col_name not in existing_q_cols:
                         conn.execute(text(f'ALTER TABLE questions ADD COLUMN "{col_name}" {col_type};'))
-                    conn.commit()
-                except Exception:
-                    pass
 
-            # Resources table
-            for col_name, col_type in r_cols:
-                try:
-                    if is_pg:
-                        conn.execute(text(f'ALTER TABLE resources ADD COLUMN IF NOT EXISTS "{col_name}" {col_type};'))
-                    else:
+                res2 = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='resources'"))
+                existing_r_cols = {row[0] for row in res2}
+                for col_name, col_type in r_cols:
+                    if col_name not in existing_r_cols:
                         conn.execute(text(f'ALTER TABLE resources ADD COLUMN "{col_name}" {col_type};'))
-                    conn.commit()
-                except Exception:
-                    pass
+                conn.commit()
 
-    print("Schema columns verified successfully.")
+    print("Schema columns verified successfully.", flush=True)
 
 
 def populate_bilingual_resources():
@@ -127,12 +119,16 @@ def populate_bilingual_resources():
         topics = Topic.query.all()
         updated_count = 0
 
+        resources_by_topic = {}
+        for r in Resource.query.all():
+            resources_by_topic.setdefault(r.topic_id, []).append(r)
+
         for t in topics:
             kn_data = TOPIC_RESOURCES_KN.get(t.name)
             v_map = VIDEO_MAPPINGS.get(t.name, {})
             kn_video_url = v_map.get("videoUrl_kn") or f"https://www.youtube.com/results?search_query=VTU+{t.name.replace(' ', '+')}+in+Kannada"
 
-            resources = Resource.query.filter_by(topic_id=t.id).all()
+            resources = resources_by_topic.get(t.id, [])
             for r in resources:
                 if r.type == 'notes':
                     if kn_data and 'notes' in kn_data:
@@ -178,17 +174,19 @@ def populate_bilingual_resources():
                     updated_count += 1
 
         db.session.commit()
-        print(f"Successfully populated and localized {updated_count} resources in database.")
+        print(f"Successfully populated and localized {updated_count} resources in database.", flush=True)
 
 
 def sync_clean_multilingual_questions():
     """
-    Synchronizes all 210 questions across 14 topics with 100% clean English,
-    Kannada, and Hindi translations with 5 distinct options and ZERO placeholders.
+    Synchronizes all 364 questions across 14 topics with 100% clean English,
+    Kannada, and Hindi translations with strictly 4 options (A-D) and ZERO placeholders.
     """
-    print("\nSynchronizing clean 5-option questions (en, kn, hi) across all 14 topics...", flush=True)
+    print("\nSynchronizing clean 4-option questions (en, kn, hi) across all 14 topics...", flush=True)
     with app.app_context():
         topic_map = {t.name: t for t in Topic.query.all()}
+        # Fast in-memory map of existing questions to avoid 364 round-trip network queries
+        existing_map = {(q.topic_id, q.text): q for q in Question.query.all()}
         updated_count = 0
         inserted_count = 0
 
@@ -198,14 +196,13 @@ def sync_clean_multilingual_questions():
                 print(f"Warning: topic not found: {item['topic']}")
                 continue
 
-            # Look for existing question by topic and text
-            existing = Question.query.filter_by(topic_id=t.id, text=item["text"]).first()
+            existing = existing_map.get((t.id, item["text"]))
             if existing:
                 existing.option_a = item["option_a"]
                 existing.option_b = item["option_b"]
                 existing.option_c = item["option_c"]
                 existing.option_d = item["option_d"]
-                existing.option_e = item["option_e"]
+                existing.option_e = None
                 existing.correct_option = item["correct_option"]
                 existing.difficulty = item["difficulty"]
                 existing.subtopic = item["subtopic"]
@@ -215,7 +212,7 @@ def sync_clean_multilingual_questions():
                 existing.option_b_kn = item["option_b_kn"]
                 existing.option_c_kn = item["option_c_kn"]
                 existing.option_d_kn = item["option_d_kn"]
-                existing.option_e_kn = item["option_e_kn"]
+                existing.option_e_kn = None
                 existing.explanation_kn = item["explanation_kn"]
                 existing.subtopic_kn = item["subtopic_kn"]
                 existing.text_hi = item["text_hi"]
@@ -223,7 +220,7 @@ def sync_clean_multilingual_questions():
                 existing.option_b_hi = item["option_b_hi"]
                 existing.option_c_hi = item["option_c_hi"]
                 existing.option_d_hi = item["option_d_hi"]
-                existing.option_e_hi = item["option_e_hi"]
+                existing.option_e_hi = None
                 existing.explanation_hi = item["explanation_hi"]
                 existing.subtopic_hi = item["subtopic_hi"]
                 updated_count += 1
@@ -235,7 +232,7 @@ def sync_clean_multilingual_questions():
                     option_b=item["option_b"],
                     option_c=item["option_c"],
                     option_d=item["option_d"],
-                    option_e=item["option_e"],
+                    option_e=None,
                     correct_option=item["correct_option"],
                     difficulty=item["difficulty"],
                     subtopic=item["subtopic"],
@@ -245,7 +242,7 @@ def sync_clean_multilingual_questions():
                     option_b_kn=item["option_b_kn"],
                     option_c_kn=item["option_c_kn"],
                     option_d_kn=item["option_d_kn"],
-                    option_e_kn=item["option_e_kn"],
+                    option_e_kn=None,
                     explanation_kn=item["explanation_kn"],
                     subtopic_kn=item["subtopic_kn"],
                     text_hi=item["text_hi"],
@@ -253,7 +250,7 @@ def sync_clean_multilingual_questions():
                     option_b_hi=item["option_b_hi"],
                     option_c_hi=item["option_c_hi"],
                     option_d_hi=item["option_d_hi"],
-                    option_e_hi=item["option_e_hi"],
+                    option_e_hi=None,
                     explanation_hi=item["explanation_hi"],
                     subtopic_hi=item["subtopic_hi"]
                 )

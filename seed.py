@@ -69,7 +69,7 @@ def seed_database(app):
             topic_objects[name] = t
 
         # Helper to add questions from verified curriculum dataset
-        print("Seeding verified 5-option MCQs across all 14 topics with full EN, KN, and HI support...")
+        print("Seeding verified 4-option MCQs across all 14 topics with full EN, KN, and HI support...")
         for item in ALL_CURRICULUM_QUESTIONS:
             t_obj = topic_objects.get(item["topic"])
             if t_obj:
@@ -80,7 +80,7 @@ def seed_database(app):
                     option_b=item["option_b"],
                     option_c=item["option_c"],
                     option_d=item["option_d"],
-                    option_e=item["option_e"],
+                    option_e=None,
                     correct_option=item["correct_option"],
                     difficulty=item["difficulty"],
                     subtopic=item["subtopic"],
@@ -90,7 +90,7 @@ def seed_database(app):
                     option_b_kn=item["option_b_kn"],
                     option_c_kn=item["option_c_kn"],
                     option_d_kn=item["option_d_kn"],
-                    option_e_kn=item["option_e_kn"],
+                    option_e_kn=None,
                     explanation_kn=item["explanation_kn"],
                     subtopic_kn=item["subtopic_kn"],
                     text_hi=item["text_hi"],
@@ -98,7 +98,7 @@ def seed_database(app):
                     option_b_hi=item["option_b_hi"],
                     option_c_hi=item["option_c_hi"],
                     option_d_hi=item["option_d_hi"],
-                    option_e_hi=item["option_e_hi"],
+                    option_e_hi=None,
                     explanation_hi=item["explanation_hi"],
                     subtopic_hi=item["subtopic_hi"]
                 )

@@ -42,39 +42,38 @@ def test_bilingual_video_urls(client):
             assert 'youtube' in url_kn.lower()
 
 
-def test_question_5_options_schema_and_correct_index(client):
-    """Verify that all questions have 5 distinct options and valid correct_index."""
+def test_question_4_options_schema_and_correct_index(client):
+    """Verify that all questions have strictly 4 options (A-D) and valid correct_index (0-3)."""
     with app.app_context():
         questions = Question.query.all()
-        assert len(questions) >= 200
+        assert len(questions) >= 300
 
         for q in questions:
-            # 5 options validation
+            # 4 options validation
             assert q.option_a is not None and len(q.option_a) > 0
             assert q.option_b is not None and len(q.option_b) > 0
             assert q.option_c is not None and len(q.option_c) > 0
             assert q.option_d is not None and len(q.option_d) > 0
-            assert q.option_e is not None and len(q.option_e) > 0
 
             # Correct option and index
-            assert q.correct_option in ('A', 'B', 'C', 'D', 'E')
-            assert 0 <= q.correct_index <= 4
+            assert q.correct_option in ('A', 'B', 'C', 'D')
+            assert 0 <= q.correct_index <= 3
 
             # to_dict in English
             dict_en = q.to_dict(lang='en')
-            assert len(dict_en['options']) == 5
-            assert len(dict_en['options_list']) == 5
+            assert len(dict_en['options']) == 4
+            assert len(dict_en['options_list']) == 4
             assert dict_en['correct_index'] == q.correct_index
 
             # to_dict in Kannada
             dict_kn = q.to_dict(lang='kn')
-            assert len(dict_kn['options']) == 5
-            assert len(dict_kn['options_list']) == 5
+            assert len(dict_kn['options']) == 4
+            assert len(dict_kn['options_list']) == 4
             assert dict_kn['correct_index'] == q.correct_index
 
 
 def test_quiz_api_multilingual_and_tiers(client):
-    """Verify that /api/quiz/<topic_id>/questions serves 5 options in EN and KN across tiers."""
+    """Verify that /api/quiz/<topic_id>/questions serves 4 options in EN and KN across tiers."""
     with app.app_context():
         topic = Topic.query.first()
         topic_id = topic.id
@@ -84,26 +83,28 @@ def test_quiz_api_multilingual_and_tiers(client):
     assert res_en.status_code == 200
     data_en = res_en.get_json()
     assert len(data_en['questions']) > 0
+    assert len(data_en['questions']) <= 10
     for q in data_en['questions']:
-        assert len(q['options']) == 5
-        assert len(q['options_list']) == 5
-        assert 0 <= q['correct_index'] <= 4
+        assert len(q['options']) == 4
+        assert len(q['options_list']) == 4
+        assert 0 <= q['correct_index'] <= 3
 
     # Test Kannada Hard
     res_kn = client.get(f'/api/quiz/{topic_id}/questions?lang=kn&difficulty=hard')
     assert res_kn.status_code == 200
     data_kn = res_kn.get_json()
     assert len(data_kn['questions']) > 0
+    assert len(data_kn['questions']) <= 10
     for q in data_kn['questions']:
-        assert len(q['options']) == 5
-        assert len(q['options_list']) == 5
-        assert 0 <= q['correct_index'] <= 4
+        assert len(q['options']) == 4
+        assert len(q['options_list']) == 4
+        assert 0 <= q['correct_index'] <= 3
         # Verify Kannada script in question or options
         assert any('\u0C80' <= c <= '\u0CFF' for c in q['text']) or any('\u0C80' <= c <= '\u0CFF' for c in q['options_list'])
 
 
 def test_submit_quiz_numeric_index(client):
-    """Verify that quiz submission accurately grades using numeric indices 0-4."""
+    """Verify that quiz submission accurately grades using numeric indices 0-3."""
     # Login as student1
     login_res = client.post('/login', data={
         'email': 'student1@demo.test',
@@ -117,7 +118,7 @@ def test_submit_quiz_numeric_index(client):
         q_id = q.id
         correct_idx = str(q.correct_index)
 
-    # Submit with numeric index (e.g. '0', '1', '2', '3', '4')
+    # Submit with numeric index (e.g. '0', '1', '2', '3')
     res = client.post(f'/quiz/{topic.id}/submit', data={
         f'q_{q_id}': correct_idx,
         'difficulty_mix': 'Fixed Tier: Easy'
@@ -138,27 +139,26 @@ def test_no_placeholder_translations_in_questions(client):
 
         # 2. Check all questions have full Hindi fields
         questions = Question.query.all()
-        assert len(questions) >= 200
+        assert len(questions) >= 300
         for q in questions:
             assert q.text_hi is not None and len(q.text_hi) > 0
             assert q.option_a_hi is not None and len(q.option_a_hi) > 0
             assert q.option_b_hi is not None and len(q.option_b_hi) > 0
             assert q.option_c_hi is not None and len(q.option_c_hi) > 0
             assert q.option_d_hi is not None and len(q.option_d_hi) > 0
-            assert q.option_e_hi is not None and len(q.option_e_hi) > 0
             assert q.explanation_hi is not None and len(q.explanation_hi) > 0
 
             # Hindi to_dict check
             dict_hi = q.to_dict(lang='hi')
-            assert len(dict_hi['options']) == 5
-            assert len(dict_hi['options_list']) == 5
+            assert len(dict_hi['options']) == 4
+            assert len(dict_hi['options_list']) == 4
             assert dict_hi['correct_index'] == q.correct_index
             # Ensure Hindi Devanagari script is present
             assert any('\u0900' <= char <= '\u097F' for char in dict_hi['text']) or any('\u0900' <= char <= '\u097F' for char in dict_hi['options_list'])
 
 
 def test_quiz_api_hindi_support(client):
-    """Verify that /api/quiz/<topic_id>/questions serves 5 options in Hindi (lang=hi)."""
+    """Verify that /api/quiz/<topic_id>/questions serves 4 options in Hindi (lang=hi)."""
     with app.app_context():
         topic = Topic.query.first()
         topic_id = topic.id
@@ -167,9 +167,10 @@ def test_quiz_api_hindi_support(client):
     assert res_hi.status_code == 200
     data_hi = res_hi.get_json()
     assert len(data_hi['questions']) > 0
+    assert len(data_hi['questions']) <= 10
     for q in data_hi['questions']:
-        assert len(q['options']) == 5
-        assert len(q['options_list']) == 5
-        assert 0 <= q['correct_index'] <= 4
+        assert len(q['options']) == 4
+        assert len(q['options_list']) == 4
+        assert 0 <= q['correct_index'] <= 3
         assert any('\u0900' <= c <= '\u097F' for c in q['text']) or any('\u0900' <= c <= '\u097F' for c in q['options_list'])
 

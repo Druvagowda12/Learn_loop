@@ -13,10 +13,10 @@ BAND_MEDIUM_MIN = 40.0
 BAND_MEDIUM_MAX = 74.99
 BAND_HIGH_MIN = 75.0
 
-# Difficulty Mix Configurations (total = 5 questions)
-MIX_EASY_HEAVY = {'easy': 3, 'medium': 2, 'hard': 0}
-MIX_BALANCED = {'easy': 1, 'medium': 3, 'hard': 1}
-MIX_HARD_HEAVY = {'easy': 0, 'medium': 2, 'hard': 3}
+# Difficulty Mix Configurations (total = 10 questions)
+MIX_EASY_HEAVY = {'easy': 6, 'medium': 3, 'hard': 1}
+MIX_BALANCED = {'easy': 3, 'medium': 4, 'hard': 3}
+MIX_HARD_HEAVY = {'easy': 1, 'medium': 4, 'hard': 5}
 
 
 def compute_attempt_score(results: List[Dict[str, Any]]) -> float:

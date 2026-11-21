@@ -534,52 +534,111 @@ def take_quiz(topic_id):
     current_mastery = progress.mastery_level if progress else 'Low'
     last_score = last_attempt.score_pct if last_attempt else None
 
+    # Smart anti-repeat shuffle engine: track seen question IDs in session
+    seen_map = session.get('seen_quiz_questions', {})
+    seen_ids = set(seen_map.get(str(topic_id), []))
+
     # Check for manual tier override (?difficulty=easy|medium|hard)
     active_tier = request.args.get('difficulty')
     if active_tier in ('easy', 'medium', 'hard'):
         pool = Question.query.filter_by(topic_id=topic_id, difficulty=active_tier).all()
-        if len(pool) >= 5:
-            selected_questions = random.sample(pool, 5)
+        unseen_pool = [q for q in pool if q.id not in seen_ids]
+        if len(unseen_pool) < 10:
+            seen_ids = set()
+            unseen_pool = list(pool)
+
+        if len(unseen_pool) >= 10:
+            selected_questions = random.sample(unseen_pool, 10)
         else:
-            selected_questions = list(pool)
+            selected_questions = list(unseen_pool)
             all_pool = Question.query.filter_by(topic_id=topic_id).all()
             rem = [q for q in all_pool if q not in selected_questions]
-            selected_questions.extend(random.sample(rem, min(5 - len(selected_questions), len(rem))))
+            selected_questions.extend(random.sample(rem, min(10 - len(selected_questions), len(rem))))
         diff_mix_label = f"Fixed Tier: {active_tier.capitalize()}"
     else:
         active_tier = None
-        # Compute next difficulty mix using rule-based engine
+        # Compute next difficulty mix using rule-based engine (total 10 questions)
         diff_mix = next_difficulty(current_mastery, last_score)
 
-        # Fetch pool of questions matching difficulty requirements
         easy_pool = Question.query.filter_by(topic_id=topic_id, difficulty='easy').all()
         med_pool = Question.query.filter_by(topic_id=topic_id, difficulty='medium').all()
         hard_pool = Question.query.filter_by(topic_id=topic_id, difficulty='hard').all()
 
-        selected_questions = []
-        # Pick questions according to mix
-        selected_questions.extend(random.sample(easy_pool, min(diff_mix['easy'], len(easy_pool))))
-        selected_questions.extend(random.sample(med_pool, min(diff_mix['medium'], len(med_pool))))
-        selected_questions.extend(random.sample(hard_pool, min(diff_mix['hard'], len(hard_pool))))
+        easy_unseen = [q for q in easy_pool if q.id not in seen_ids]
+        med_unseen = [q for q in med_pool if q.id not in seen_ids]
+        hard_unseen = [q for q in hard_pool if q.id not in seen_ids]
 
-        # If count is less than 5, backfill from remaining pool
-        if len(selected_questions) < 5:
+        # Reset cycle if any pool doesn't have enough unseen questions
+        if len(easy_unseen) < diff_mix['easy'] or len(med_unseen) < diff_mix['medium'] or len(hard_unseen) < diff_mix['hard']:
+            seen_ids = set()
+            easy_unseen = list(easy_pool)
+            med_unseen = list(med_pool)
+            hard_unseen = list(hard_pool)
+
+        selected_questions = []
+        selected_questions.extend(random.sample(easy_unseen, min(diff_mix['easy'], len(easy_unseen))))
+        selected_questions.extend(random.sample(med_unseen, min(diff_mix['medium'], len(med_unseen))))
+        selected_questions.extend(random.sample(hard_unseen, min(diff_mix['hard'], len(hard_unseen))))
+
+        if len(selected_questions) < 10:
             all_pool = Question.query.filter_by(topic_id=topic_id).all()
             remaining = [q for q in all_pool if q not in selected_questions]
-            needed = 5 - len(selected_questions)
+            needed = 10 - len(selected_questions)
             selected_questions.extend(random.sample(remaining, min(needed, len(remaining))))
 
         diff_mix_label = f"{diff_mix['easy']} easy, {diff_mix['medium']} medium, {diff_mix['hard']} hard"
 
+    # Record seen questions in session
+    for q in selected_questions:
+        seen_ids.add(q.id)
+    seen_map[str(topic_id)] = list(seen_ids)
+    session['seen_quiz_questions'] = seen_map
+    session.modified = True
+
+    # Shuffle question order
     random.shuffle(selected_questions)
 
-    # Prepare 5-option question payloads in active language (without answers, to ensure secure client delivery)
-    quiz_questions = [q.to_dict(lang=user_lang, include_answer=False) for q in selected_questions]
+    # Build 4-option shuffled structures and trilingual client payload
+    quiz_questions = []
+    quiz_payload = []
+
+    for q in selected_questions:
+        # Randomly shuffle the presentation order of the 4 answer choices (A-D)
+        orig_keys = ['A', 'B', 'C', 'D']
+        random.shuffle(orig_keys)
+
+        shuffled_options = []
+        for display_idx, orig_k in enumerate(orig_keys):
+            disp_label = chr(65 + display_idx) # 'A', 'B', 'C', 'D'
+            shuffled_options.append({
+                'key': orig_k,
+                'display_label': disp_label,
+                'text_en': getattr(q, f'option_{orig_k.lower()}'),
+                'text_kn': getattr(q, f'option_{orig_k.lower()}_kn') or getattr(q, f'option_{orig_k.lower()}'),
+                'text_hi': getattr(q, f'option_{orig_k.lower()}_hi') or getattr(q, f'option_{orig_k.lower()}'),
+            })
+
+        q_dict = q.to_dict(lang=user_lang, include_answer=False)
+        q_dict['shuffled_options'] = shuffled_options
+        quiz_questions.append(q_dict)
+
+        quiz_payload.append({
+            'id': q.id,
+            'difficulty': q.difficulty,
+            'text_en': q.text,
+            'text_kn': q.text_kn or q.text,
+            'text_hi': q.text_hi or q.text,
+            'subtopic_en': q.subtopic,
+            'subtopic_kn': q.subtopic_kn or q.subtopic,
+            'subtopic_hi': q.subtopic_hi or q.subtopic,
+            'shuffled_options': shuffled_options
+        })
 
     return render_template(
         'quiz.html',
         topic=topic,
         questions=quiz_questions,
+        quiz_payload=quiz_payload,
         difficulty_mix=diff_mix_label,
         current_mastery=current_mastery,
         active_tier=active_tier
@@ -600,8 +659,8 @@ def api_quiz_questions(topic_id):
     else:
         pool = Question.query.filter_by(topic_id=topic_id).all()
 
-    if len(pool) > 5:
-        selected = random.sample(pool, 5)
+    if len(pool) > 10:
+        selected = random.sample(pool, 10)
     else:
         selected = pool
 
@@ -625,12 +684,12 @@ def submit_quiz(topic_id):
     user_lang = get_current_lang()
     difficulty_mix = request.form.get('difficulty_mix', 'adaptive')
 
-    # Server-side verification of answers (supports 5 options: A-E and numeric index 0-4)
+    # Server-side verification of answers (strictly 4 options: A-D and numeric index 0-3)
     results = []
     missed_subtopics = set()
     detailed_answers = []
 
-    opt_index_map = {'0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E'}
+    opt_index_map = {'0': 'A', '1': 'B', '2': 'C', '3': 'D'}
 
     # Iterate through submitted question answers
     for key, chosen_opt in request.form.items():
@@ -641,11 +700,11 @@ def submit_quiz(topic_id):
                 raw_opt = str(chosen_opt).strip().upper()
                 chosen_letter = opt_index_map.get(raw_opt, raw_opt)
 
-                # Strict validation against correct letter or numeric index
+                # Strict validation against correct letter or numeric index (0-3)
                 is_correct = False
                 if chosen_letter == (question.correct_option or '').strip().upper():
                     is_correct = True
-                elif raw_opt in ('0', '1', '2', '3', '4') and int(raw_opt) == question.correct_index:
+                elif raw_opt in ('0', '1', '2', '3') and int(raw_opt) == question.correct_index:
                     is_correct = True
 
                 results.append({'is_correct': is_correct})
@@ -654,24 +713,44 @@ def submit_quiz(topic_id):
                     missed_subtopics.add(question.subtopic)
 
                 is_kn = (user_lang == 'kn')
-                opt_e = question.option_e_kn if is_kn and question.option_e_kn else question.option_e
-                if not opt_e:
-                    opt_e = "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ" if is_kn else "None of the above"
+                is_hi = (user_lang == 'hi')
+
+                if is_kn:
+                    q_text = question.text_kn if question.text_kn else question.text
+                    q_expl = question.explanation_kn if question.explanation_kn else question.explanation
+                    opts = {
+                        'A': question.option_a_kn if question.option_a_kn else question.option_a,
+                        'B': question.option_b_kn if question.option_b_kn else question.option_b,
+                        'C': question.option_c_kn if question.option_c_kn else question.option_c,
+                        'D': question.option_d_kn if question.option_d_kn else question.option_d
+                    }
+                elif is_hi:
+                    q_text = question.text_hi if question.text_hi else question.text
+                    q_expl = question.explanation_hi if question.explanation_hi else question.explanation
+                    opts = {
+                        'A': question.option_a_hi if question.option_a_hi else question.option_a,
+                        'B': question.option_b_hi if question.option_b_hi else question.option_b,
+                        'C': question.option_c_hi if question.option_c_hi else question.option_c,
+                        'D': question.option_d_hi if question.option_d_hi else question.option_d
+                    }
+                else:
+                    q_text = question.text
+                    q_expl = question.explanation
+                    opts = {
+                        'A': question.option_a,
+                        'B': question.option_b,
+                        'C': question.option_c,
+                        'D': question.option_d
+                    }
 
                 detailed_answers.append({
                     'question_id': question.id,
-                    'text': (question.text_kn if is_kn and question.text_kn else question.text),
+                    'text': q_text,
                     'chosen_option': chosen_letter,
                     'correct_option': question.correct_option,
                     'is_correct': is_correct,
-                    'explanation': (question.explanation_kn if is_kn and question.explanation_kn else question.explanation),
-                    'options': {
-                        'A': (question.option_a_kn if is_kn and question.option_a_kn else question.option_a),
-                        'B': (question.option_b_kn if is_kn and question.option_b_kn else question.option_b),
-                        'C': (question.option_c_kn if is_kn and question.option_c_kn else question.option_c),
-                        'D': (question.option_d_kn if is_kn and question.option_d_kn else question.option_d),
-                        'E': opt_e
-                    }
+                    'explanation': q_expl,
+                    'options': opts
                 })
 
     score_pct = compute_attempt_score(results)

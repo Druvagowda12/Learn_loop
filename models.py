@@ -107,7 +107,7 @@ class Question(BaseModel):
 
     @property
     def correct_index(self) -> int:
-        mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
+        mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
         return mapping.get((self.correct_option or 'A').strip().upper(), 0)
 
     def to_dict(self, lang='en', include_answer=False):
@@ -117,7 +117,6 @@ class Question(BaseModel):
             opt_b = self.option_b_kn if self.option_b_kn else self.option_b
             opt_c = self.option_c_kn if self.option_c_kn else self.option_c
             opt_d = self.option_d_kn if self.option_d_kn else self.option_d
-            opt_e = self.option_e_kn if self.option_e_kn else (self.option_e or "ಮೇಲಿನ ಯಾವುದೂ ಅಲ್ಲ")
             subtopic = self.subtopic_kn if self.subtopic_kn else self.subtopic
             explanation = self.explanation_kn if self.explanation_kn else self.explanation
         elif lang == 'hi':
@@ -126,7 +125,6 @@ class Question(BaseModel):
             opt_b = self.option_b_hi if self.option_b_hi else self.option_b
             opt_c = self.option_c_hi if self.option_c_hi else self.option_c
             opt_d = self.option_d_hi if self.option_d_hi else self.option_d
-            opt_e = self.option_e_hi if self.option_e_hi else (self.option_e or "उपरोक्त में से कोई नहीं")
             subtopic = self.subtopic_hi if self.subtopic_hi else self.subtopic
             explanation = self.explanation_hi if self.explanation_hi else self.explanation
         else:
@@ -135,7 +133,6 @@ class Question(BaseModel):
             opt_b = self.option_b
             opt_c = self.option_c
             opt_d = self.option_d
-            opt_e = self.option_e or "None of the above"
             subtopic = self.subtopic
             explanation = self.explanation
 
@@ -143,11 +140,10 @@ class Question(BaseModel):
             'A': opt_a,
             'B': opt_b,
             'C': opt_c,
-            'D': opt_d,
-            'E': opt_e
+            'D': opt_d
         }
 
-        options_list = [opt_a, opt_b, opt_c, opt_d, opt_e]
+        options_list = [opt_a, opt_b, opt_c, opt_d]
 
         data = {
             'id': self.id,
@@ -163,6 +159,45 @@ class Question(BaseModel):
             data['correct_option'] = self.correct_option
             data['explanation'] = explanation
         return data
+
+    def to_trilingual_dict(self):
+        """Returns structured content for English, Kannada, and Hindi to support instant client-side switching."""
+        return {
+            'id': self.id,
+            'topic_id': self.topic_id,
+            'difficulty': self.difficulty,
+            'correct_index': self.correct_index,
+            'en': {
+                'text': self.text,
+                'subtopic': self.subtopic,
+                'options': {
+                    'A': self.option_a,
+                    'B': self.option_b,
+                    'C': self.option_c,
+                    'D': self.option_d
+                }
+            },
+            'kn': {
+                'text': self.text_kn or self.text,
+                'subtopic': self.subtopic_kn or self.subtopic,
+                'options': {
+                    'A': self.option_a_kn or self.option_a,
+                    'B': self.option_b_kn or self.option_b,
+                    'C': self.option_c_kn or self.option_c,
+                    'D': self.option_d_kn or self.option_d
+                }
+            },
+            'hi': {
+                'text': self.text_hi or self.text,
+                'subtopic': self.subtopic_hi or self.subtopic,
+                'options': {
+                    'A': self.option_a_hi or self.option_a,
+                    'B': self.option_b_hi or self.option_b,
+                    'C': self.option_c_hi or self.option_c,
+                    'D': self.option_d_hi or self.option_d
+                }
+            }
+        }
 
 
 class Attempt(BaseModel):

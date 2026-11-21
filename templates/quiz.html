@@ -176,10 +176,10 @@ Adaptive Quiz · {{ topic.name|localize }}
       </a>
     </div>
 
-    <!-- Question Review Accordion / Detailed Answers with 5 Options -->
+    <!-- Question Review Accordion / Detailed Answers with 4 Options -->
     <div class="mt-8 pt-6 border-t border-[#e2dacd]">
       <h3 class="font-serif font-bold text-base text-[#10222c] mb-4">
-        {% if user_lang == 'kn' %}ಪ್ರಶ್ನಾವಳಿ ವಿವರವಾದ ಪರಾಮರ್ಶೆ (5 ಆಯ್ಕೆಗಳು){% else %}Detailed Question Review (5-Option Architecture){% endif %}
+        {% if user_lang == 'kn' %}ಪ್ರಶ್ನಾವಳಿ ವಿವರವಾದ ಪರಾಮರ್ಶೆ (4 ಆಯ್ಕೆಗಳು){% elif user_lang == 'hi' %}प्रश्नावली विस्तृत समीक्षा (4 विकल्प){% else %}Detailed Question Review (4-Option Architecture){% endif %}
       </h3>
       <div class="space-y-3">
         {% for item in detailed_answers %}
@@ -188,28 +188,28 @@ Adaptive Quiz · {{ topic.name|localize }}
           <div class="flex items-start justify-between gap-2 mb-2">
             <span
               class="text-xs font-semibold {% if item.is_correct %}text-emerald-800{% else %}text-red-800{% endif %}">
-              {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ{% else %}Question{% endif %} {{ loop.index }}: {{ item.text }}
+              {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ{% elif user_lang == 'hi' %}प्रश्न{% else %}Question{% endif %} {{ loop.index }}: {{ item.text }}
             </span>
             <span
               class="px-2 py-0.5 rounded text-[10px] font-bold {% if item.is_correct %}badge-high{% else %}badge-low{% endif %}">
-              {% if item.is_correct %}Correct (+20%){% else %}Incorrect{% endif %}
+              {% if item.is_correct %}Correct (+10%){% else %}Incorrect{% endif %}
             </span>
           </div>
           <div class="text-xs text-gray-700 space-y-1">
             <div>
-              <strong>{% if user_lang == 'kn' %}ನಿಮ್ಮ ಆಯ್ಕೆ:{% else %}Your answer:{% endif %}</strong> 
+              <strong>{% if user_lang == 'kn' %}ನಿಮ್ಮ ಆಯ್ಕೆ:{% elif user_lang == 'hi' %}आपका उत्तर:{% else %}Your answer:{% endif %}</strong> 
               <span class="font-mono font-bold">{{ item.chosen_option }}</span> 
               ({{ item.options.get(item.chosen_option) or 'N/A' }})
             </div>
             {% if not item.is_correct %}
             <div class="text-emerald-800 font-medium">
-              <strong>{% if user_lang == 'kn' %}ಸರಿಯಾದ ಉತ್ತರ:{% else %}Correct answer:{% endif %}</strong> 
+              <strong>{% if user_lang == 'kn' %}ಸರಿಯಾದ ಉತ್ತರ:{% elif user_lang == 'hi' %}सही उत्तर:{% else %}Correct answer:{% endif %}</strong> 
               <span class="font-mono font-bold">{{ item.correct_option }}</span> 
               ({{ item.options.get(item.correct_option) }})
             </div>
             {% endif %}
             <div class="pt-1.5 text-gray-600 italic border-t border-black/5 mt-1">
-              <strong>{% if user_lang == 'kn' %}ವಿವರಣೆ:{% else %}Explanation:{% endif %}</strong> {{ item.explanation }}
+              <strong>{% if user_lang == 'kn' %}ವಿವರಣೆ:{% elif user_lang == 'hi' %}व्याख्या:{% else %}Explanation:{% endif %}</strong> {{ item.explanation }}
             </div>
           </div>
         </div>
@@ -221,7 +221,7 @@ Adaptive Quiz · {{ topic.name|localize }}
 
   {% else %}
   <!-- ================================================================= -->
-  <!-- INTERACTIVE 5-OPTION QUIZ TAKING VIEW WITH LIVE EN/KN & DIFFICULTY SYNC -->
+  <!-- INTERACTIVE 4-OPTION QUIZ TAKING VIEW WITH LIVE EN/KN/HI & DIFFICULTY SYNC -->
   <!-- ================================================================= -->
   <div class="space-y-6">
 
@@ -233,27 +233,35 @@ Adaptive Quiz · {{ topic.name|localize }}
             <span class="eyebrow">{{ topic.subject.name|localize }}</span>
             <span class="text-gray-300">•</span>
             <span class="text-xs text-gray-500">
-              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆಯ ರಸಪ್ರಶ್ನೆ (5 ಆಯ್ಕೆಗಳು){% else %}5-Option Adaptive Diagnostic Mode{% endif %}
+              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆಯ ರಸಪ್ರಶ್ನೆ (4 ಆಯ್ಕೆಗಳು - 10 ಪ್ರಶ್ನೆಗಳು){% elif user_lang == 'hi' %}4-विकल्प अनुकूली क्विज (10 प्रश्न){% else %}4-Option Adaptive Diagnostic Mode (10 Questions){% endif %}
             </span>
           </div>
           <h1 class="text-xl sm:text-2xl font-serif font-bold text-[#10222c]">{{ topic.name|localize }}</h1>
         </div>
 
-        <!-- In-Quiz Language Switcher (EN <-> KN) -->
+        <!-- In-Quiz Trilingual Switcher (EN <-> KN <-> HI) without resetting progress -->
         <div class="flex items-center gap-2">
           <span class="text-xs text-gray-500 font-medium">
-            {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ ಭಾಷೆ:{% else %}Quiz Language:{% endif %}
+            {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ ಭಾಷೆ:{% elif user_lang == 'hi' %}क्विज भाषा:{% else %}Quiz Language:{% endif %}
           </span>
           <div class="flex items-center bg-[#ede6da] p-1 rounded-xl border border-[#d8cebe] text-xs shadow-inner">
             <button type="button" 
-                    onclick="switchLanguage('en')" 
-                    class="px-2.5 py-1 rounded-lg font-bold transition-all {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+                    data-lang="en"
+                    onclick="switchQuizLanguage('en')" 
+                    class="quiz-lang-btn px-2.5 py-1 rounded-lg font-bold transition-all {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
               EN
             </button>
             <button type="button" 
-                    onclick="switchLanguage('kn')" 
-                    class="px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+                    data-lang="kn"
+                    onclick="switchQuizLanguage('kn')" 
+                    class="quiz-lang-btn px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
               ಕನ್ನಡ
+            </button>
+            <button type="button" 
+                    data-lang="hi"
+                    onclick="switchQuizLanguage('hi')" 
+                    class="quiz-lang-btn px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'hi' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+              हिंदी
             </button>
           </div>
         </div>
@@ -263,24 +271,24 @@ Adaptive Quiz · {{ topic.name|localize }}
       <div class="pt-3 border-t border-[#ede6da] flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2">
           <span class="font-bold text-[#10222c] uppercase tracking-wider text-[11px]">
-            {% if user_lang == 'kn' %}ಕಷ್ಟದ ಹಂತ (Tier):{% else %}Difficulty Level:{% endif %}
+            {% if user_lang == 'kn' %}ಕಷ್ಟದ ಹಂತ (Tier):{% elif user_lang == 'hi' %}कठिनाई स्तर:{% else %}Difficulty Level:{% endif %}
           </span>
           <div class="flex flex-wrap gap-1.5">
             <a href="{{ url_for('take_quiz', topic_id=topic.id) }}" 
                class="px-3 py-1 rounded-lg border font-semibold transition-all {% if not active_tier %}bg-[#10222c] text-white border-[#10222c] shadow-sm{% else %}bg-white text-gray-700 hover:bg-gray-100 border-[#d8cebe]{% endif %}">
-              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆ (Adaptive){% else %}Adaptive (Mix){% endif %}
+              {% if user_lang == 'kn' %}ಹೊಂದಾಣಿಕೆ (Adaptive){% elif user_lang == 'hi' %}अनुकूली (Adaptive){% else %}Adaptive (Mix){% endif %}
             </a>
             <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='easy') }}" 
                class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'easy' %}bg-emerald-700 text-white border-emerald-700 shadow-sm{% else %}bg-white text-emerald-800 hover:bg-emerald-50 border-emerald-200{% endif %}">
-              {% if user_lang == 'kn' %}ಸುಲಭ (Easy){% else %}Easy{% endif %}
+              {% if user_lang == 'kn' %}ಸುಲಭ (Easy){% elif user_lang == 'hi' %}आसान (Easy){% else %}Easy{% endif %}
             </a>
             <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='medium') }}" 
                class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'medium' %}bg-amber-600 text-white border-amber-600 shadow-sm{% else %}bg-white text-amber-800 hover:bg-amber-50 border-amber-200{% endif %}">
-              {% if user_lang == 'kn' %}ಮಧ್ಯಮ (Medium){% else %}Medium{% endif %}
+              {% if user_lang == 'kn' %}ಮಧ್ಯಮ (Medium){% elif user_lang == 'hi' %}मध्यम (Medium){% else %}Medium{% endif %}
             </a>
             <a href="{{ url_for('take_quiz', topic_id=topic.id, difficulty='hard') }}" 
                class="px-3 py-1 rounded-lg border font-semibold transition-all {% if active_tier == 'hard' %}bg-rose-700 text-white border-rose-700 shadow-sm{% else %}bg-white text-rose-800 hover:bg-rose-50 border-rose-200{% endif %}">
-              {% if user_lang == 'kn' %}ಕಠಿಣ (Hard){% else %}Hard{% endif %}
+              {% if user_lang == 'kn' %}ಕಠಿಣ (Hard){% elif user_lang == 'hi' %}कठिन (Hard){% else %}Hard{% endif %}
             </a>
           </div>
         </div>
@@ -294,17 +302,17 @@ Adaptive Quiz · {{ topic.name|localize }}
     <!-- Stepper / Progress Bar -->
     <div class="bg-[#ede6da] p-3 rounded-xl border border-[#d8cebe] flex items-center justify-between text-xs">
       <span id="quiz-progress-text" class="font-semibold text-[#10222c]">
-        {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ 1 / {{ questions|length }}{% else %}Question 1 of {{ questions|length }}{% endif %}
+        {% if user_lang == 'kn' %}ಪ್ರಶ್ನೆ 1 / {{ questions|length }}{% elif user_lang == 'hi' %}प्रश्न 1 / {{ questions|length }}{% else %}Question 1 of {{ questions|length }}{% endif %}
       </span>
       <div class="w-1/2 sm:w-2/3 bg-white h-2.5 rounded-full overflow-hidden border border-[#d8cebe]">
-        <div id="quiz-progress-bar" class="bg-[#e8a33d] h-full transition-all duration-300" style="width: 20%;"></div>
+        <div id="quiz-progress-bar" class="bg-[#e8a33d] h-full transition-all duration-300" style="width: 10%;"></div>
       </div>
       <span id="quiz-score-badge" class="font-mono font-bold text-[#1a6b5f]">
-        {% if user_lang == 'kn' %}ಉತ್ತರಿಸಿದ್ದು: 0/{{ questions|length }}{% else %}Answered: 0/{{ questions|length }}{% endif %}
+        {% if user_lang == 'kn' %}ಉತ್ತರಿಸಿದ್ದು: 0/{{ questions|length }}{% elif user_lang == 'hi' %}उत्तर दिया: 0/{{ questions|length }}{% else %}Answered: 0/{{ questions|length }}{% endif %}
       </span>
     </div>
 
-    <!-- Main Question Form with 5 Options (A, B, C, D, E) -->
+    <!-- Main Question Form with Strictly 4 Options (A, B, C, D) -->
     <form id="quiz-form" method="POST" action="{{ url_for('submit_quiz', topic_id=topic.id) }}">
       <input type="hidden" name="difficulty_mix" value="{{ difficulty_mix }}">
 
@@ -316,10 +324,22 @@ Adaptive Quiz · {{ topic.name|localize }}
         <div class="flex items-start justify-between gap-4">
           <div>
             <span class="text-[11px] font-bold uppercase tracking-wider text-[#1a6b5f]">
-              {% if user_lang == 'kn' %}ಉಪವಿಷಯ:{% else %}Subtopic:{% endif %} {{ q.subtopic }}
+              <span class="subtopic-prefix">{% if user_lang == 'kn' %}ಉಪವಿಷಯ: {% elif user_lang == 'hi' %}उपविषय: {% else %}Subtopic: {% endif %}</span>
+              <span class="subtopic-text"
+                    data-en="{{ q.subtopic }}" 
+                    data-kn="{{ q.subtopic_kn or q.subtopic }}" 
+                    data-hi="{{ q.subtopic_hi or q.subtopic }}">
+                {% if user_lang == 'kn' %}{{ q.subtopic_kn or q.subtopic }}{% elif user_lang == 'hi' %}{{ q.subtopic_hi or q.subtopic }}{% else %}{{ q.subtopic }}{% endif %}
+              </span>
             </span>
             <h2 class="text-base sm:text-lg font-medium text-[#10222c] mt-1.5 leading-relaxed">
-              {{ loop.index }}. {{ q.text }}
+              <span class="q-num">{{ loop.index }}. </span>
+              <span class="question-text"
+                    data-en="{{ q.text }}"
+                    data-kn="{{ q.text_kn or q.text }}"
+                    data-hi="{{ q.text_hi or q.text }}">
+                {% if user_lang == 'kn' %}{{ q.text_kn or q.text }}{% elif user_lang == 'hi' %}{{ q.text_hi or q.text }}{% else %}{{ q.text }}{% endif %}
+              </span>
             </h2>
           </div>
           <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase 
@@ -330,46 +350,70 @@ Adaptive Quiz · {{ topic.name|localize }}
           </span>
         </div>
 
-        <!-- 5 Options (A through E / Index 0 to 4) -->
+        <!-- 4 Options (A through D) with shuffled presentation order -->
         <div class="space-y-2.5">
-          {% for opt_key in ['A', 'B', 'C', 'D', 'E'] %}
-          {% set opt_text = q.options.get(opt_key) %}
-          {% if opt_text %}
-          <label
-            class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-[#e2dacd] bg-white hover:bg-[#fcfbf9] hover:border-[#1a6b5f] cursor-pointer transition-all">
-            <input type="radio" 
-                   name="q_{{ q.id }}" 
-                   value="{{ opt_key }}" 
-                   data-index="{{ loop.index0 }}"
-                   required 
-                   onchange="handleOptionChange(this)"
-                   class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
-            <div class="flex-1 text-sm text-[#1d2b33]">
-              <span class="font-bold mr-1.5 text-[#10222c]">{{ opt_key }}.</span>
-              <span>{{ opt_text }}</span>
-            </div>
-          </label>
+          {% if q.shuffled_options %}
+            {% for opt in q.shuffled_options %}
+            <label
+              class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-[#e2dacd] bg-white hover:bg-[#fcfbf9] hover:border-[#1a6b5f] cursor-pointer transition-all">
+              <input type="radio" 
+                     name="q_{{ q.id }}" 
+                     value="{{ opt.key }}" 
+                     data-index="{{ loop.index0 }}"
+                     required 
+                     onchange="handleOptionChange(this)"
+                     class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
+              <div class="flex-1 text-sm text-[#1d2b33]">
+                <span class="font-bold mr-1.5 text-[#10222c]">{{ opt.display_label }}.</span>
+                <span class="opt-text"
+                      data-en="{{ opt.text_en }}"
+                      data-kn="{{ opt.text_kn }}"
+                      data-hi="{{ opt.text_hi }}">
+                  {% if user_lang == 'kn' %}{{ opt.text_kn }}{% elif user_lang == 'hi' %}{{ opt.text_hi }}{% else %}{{ opt.text_en }}{% endif %}
+                </span>
+              </div>
+            </label>
+            {% endfor %}
+          {% else %}
+            {% for opt_key in ['A', 'B', 'C', 'D'] %}
+            {% set opt_text = q.options.get(opt_key) %}
+            {% if opt_text %}
+            <label
+              class="option-label flex items-start gap-3 p-3.5 rounded-xl border border-[#e2dacd] bg-white hover:bg-[#fcfbf9] hover:border-[#1a6b5f] cursor-pointer transition-all">
+              <input type="radio" 
+                     name="q_{{ q.id }}" 
+                     value="{{ opt_key }}" 
+                     data-index="{{ loop.index0 }}"
+                     required 
+                     onchange="handleOptionChange(this)"
+                     class="mt-1 text-[#1a6b5f] focus:ring-[#1a6b5f]">
+              <div class="flex-1 text-sm text-[#1d2b33]">
+                <span class="font-bold mr-1.5 text-[#10222c]">{{ opt_key }}.</span>
+                <span class="opt-text">{{ opt_text }}</span>
+              </div>
+            </label>
+            {% endif %}
+            {% endfor %}
           {% endif %}
-          {% endfor %}
         </div>
 
         <!-- Navigation Buttons between questions -->
         <div class="flex items-center justify-between pt-4 border-t border-[#ede6da]">
           {% if not loop.first %}
-          <button type="button" onclick="prevQuestion()" class="btn-secondary text-xs px-3.5 py-1.5">
-            ← {% if user_lang == 'kn' %}ಹಿಂದಿನ ಪ್ರಶ್ನೆ{% else %}Previous{% endif %}
+          <button type="button" onclick="prevQuestion()" class="btn-prev-text btn-secondary text-xs px-3.5 py-1.5">
+            ← {% if user_lang == 'kn' %}ಹಿಂದಿನ ಪ್ರಶ್ನೆ{% elif user_lang == 'hi' %}पिछला प्रश्न{% else %}Previous{% endif %}
           </button>
           {% else %}
           <div></div>
           {% endif %}
 
           {% if not loop.last %}
-          <button type="button" onclick="nextQuestion()" class="btn-primary text-xs px-4 py-2">
-            {% if user_lang == 'kn' %}ಮುಂದಿನ ಪ್ರಶ್ನೆ{% else %}Next Question{% endif %} →
+          <button type="button" onclick="nextQuestion()" class="btn-next-text btn-primary text-xs px-4 py-2">
+            {% if user_lang == 'kn' %}ಮುಂದಿನ ಪ್ರಶ್ನೆ{% elif user_lang == 'hi' %}अगला प्रश्न{% else %}Next Question{% endif %} →
           </button>
           {% else %}
           <button type="submit" id="submit-quiz-btn" class="btn-teal text-xs font-bold px-5 py-2 shadow-sm">
-            {% if user_lang == 'kn' %}ರಸಪ್ರಶ್ನೆ ಮುಕ್ತಾಯ ಮತ್ತು ಸಲ್ಲಿಸಿ{% else %}Finish & Submit Quiz{% endif %}
+            {% if user_lang == 'kn' %}ರಸಪ್ರಶ್ನೆ ಮುಕ್ತಾಯ ಮತ್ತು ಸಲ್ಲಿಸಿ{% elif user_lang == 'hi' %}क्विज समाप्त करें और जमा करें{% else %}Finish & Submit Quiz{% endif %}
           </button>
           {% endif %}
         </div>
@@ -389,11 +433,42 @@ Adaptive Quiz · {{ topic.name|localize }}
 <script>
   let currentQ = 0;
   let totalQuestions = 0;
+  let currentLang = '{{ user_lang or "en" }}';
   const answeredMap = {};
 
   function initQuiz() {
     const cards = document.querySelectorAll('.quiz-question-card');
     totalQuestions = cards.length;
+    updateProgressUI();
+  }
+
+  function updateProgressUI() {
+    const progText = document.getElementById('quiz-progress-text');
+    if (progText) {
+      if (currentLang === 'kn') {
+        progText.innerText = `ಪ್ರಶ್ನೆ ${currentQ + 1} / ${totalQuestions}`;
+      } else if (currentLang === 'hi') {
+        progText.innerText = `प्रश्न ${currentQ + 1} / ${totalQuestions}`;
+      } else {
+        progText.innerText = `Question ${currentQ + 1} of ${totalQuestions}`;
+      }
+    }
+    const pct = totalQuestions > 0 ? ((currentQ + 1) / totalQuestions) * 100 : 0;
+    const progBar = document.getElementById('quiz-progress-bar');
+    if (progBar) {
+      progBar.style.width = `${pct}%`;
+    }
+    const answeredCount = Object.keys(answeredMap).length;
+    const badge = document.getElementById('quiz-score-badge');
+    if (badge) {
+      if (currentLang === 'kn') {
+        badge.innerText = `ಉತ್ತರಿಸಿದ್ದು: ${answeredCount}/${totalQuestions}`;
+      } else if (currentLang === 'hi') {
+        badge.innerText = `उत्तर दिया: ${answeredCount}/${totalQuestions}`;
+      } else {
+        badge.innerText = `Answered: ${answeredCount}/${totalQuestions}`;
+      }
+    }
   }
 
   function goToQuestion(idx) {
@@ -404,17 +479,7 @@ Adaptive Quiz · {{ topic.name|localize }}
       card.classList.toggle('hidden', i !== idx);
     });
     currentQ = idx;
-
-    const progText = document.getElementById('quiz-progress-text');
-    const isKn = document.body && document.body.getAttribute('data-user-lang') === 'kn';
-    if (progText) {
-      progText.innerText = isKn ? `ಪ್ರಶ್ನೆ ${idx + 1} / ${totalQuestions}` : `Question ${idx + 1} of ${totalQuestions}`;
-    }
-    const pct = totalQuestions > 0 ? ((idx + 1) / totalQuestions) * 100 : 0;
-    const progBar = document.getElementById('quiz-progress-bar');
-    if (progBar) {
-      progBar.style.width = `${pct}%`;
-    }
+    updateProgressUI();
   }
 
   function prevQuestion() {
@@ -433,14 +498,55 @@ Adaptive Quiz · {{ topic.name|localize }}
 
   function handleOptionSelect(qIdx, chosenOpt, qId) {
     answeredMap[qIdx] = chosenOpt;
-    const answeredCount = Object.keys(answeredMap).length;
-    const cards = document.querySelectorAll('.quiz-question-card');
-    const total = cards.length || totalQuestions;
-    const badge = document.getElementById('quiz-score-badge');
-    const isKn = document.body && document.body.getAttribute('data-user-lang') === 'kn';
-    if (badge) {
-      badge.innerText = isKn ? `ಉತ್ತರಿಸಿದ್ದು: ${answeredCount}/${total}` : `Answered: ${answeredCount}/${total}`;
+    updateProgressUI();
+  }
+
+  function switchQuizLanguage(lang) {
+    currentLang = lang;
+
+    // 1. Update button styling
+    document.querySelectorAll('.quiz-lang-btn').forEach(btn => {
+      const isActive = btn.dataset.lang === lang;
+      btn.classList.toggle('bg-[#e8a33d]', isActive);
+      btn.classList.toggle('text-[#10222c]', isActive);
+      btn.classList.toggle('shadow-sm', isActive);
+      btn.classList.toggle('text-gray-600', !isActive);
+    });
+
+    // 2. Update question text and subtopic
+    document.querySelectorAll('.question-text').forEach(el => {
+      if (el.dataset[lang]) el.textContent = el.dataset[lang];
+    });
+    document.querySelectorAll('.subtopic-text').forEach(el => {
+      if (el.dataset[lang]) el.textContent = el.dataset[lang];
+    });
+    document.querySelectorAll('.subtopic-prefix').forEach(el => {
+      el.textContent = lang === 'kn' ? 'ಉಪವಿಷಯ: ' : (lang === 'hi' ? 'उपविषय: ' : 'Subtopic: ');
+    });
+
+    // 3. Update all 4 option texts
+    document.querySelectorAll('.opt-text').forEach(el => {
+      if (el.dataset[lang]) el.textContent = el.dataset[lang];
+    });
+
+    // 4. Update navigation buttons
+    document.querySelectorAll('.btn-prev-text').forEach(btn => {
+      btn.textContent = lang === 'kn' ? '← ಹಿಂದಿನ ಪ್ರಶ್ನೆ' : (lang === 'hi' ? '← पिछला प्रश्न' : '← Previous');
+    });
+    document.querySelectorAll('.btn-next-text').forEach(btn => {
+      btn.textContent = lang === 'kn' ? 'ಮುಂದಿನ ಪ್ರಶ್ನೆ →' : (lang === 'hi' ? 'अगला प्रश्न →' : 'Next Question →');
+    });
+    const submitBtn = document.getElementById('submit-quiz-btn');
+    if (submitBtn) {
+      submitBtn.textContent = lang === 'kn' ? 'ರಸಪ್ರಶ್ನೆ ಮುಕ್ತಾಯ ಮತ್ತು ಸಲ್ಲಿಸಿ' : (lang === 'hi' ? 'क्विज समाप्त करें और जमा करें' : 'Finish & Submit Quiz');
     }
+
+    // 5. Update progress UI
+    updateProgressUI();
+
+    // 6. Persist cookie & storage without reloading page
+    document.cookie = `learnloop_lang=${lang}; path=/; max-age=2592000; SameSite=Lax`;
+    localStorage.setItem('learnloop_preferred_language', lang);
   }
 
   document.addEventListener('DOMContentLoaded', initQuiz);

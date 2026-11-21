@@ -94,12 +94,13 @@ def test_adaptive_quiz_and_recommendation_flow(client):
     assert b"Pointers and Memory" in res.data
     assert b"Question 1 of" in res.data
 
-    # 2. Submit quiz with all wrong options (D)
+    # 2. Submit quiz with all wrong options
     with app.app_context():
         questions = Question.query.filter_by(topic_id=topic_id).all()
-        q_data = {'difficulty_mix': '3 easy, 2 medium, 0 hard'}
-        for q in questions[:5]:
-            q_data[f'q_{q.id}'] = 'D'
+        q_data = {'difficulty_mix': '6 easy, 3 medium, 1 hard'}
+        for q in questions[:10]:
+            wrong_opt = 'A' if q.correct_option != 'A' else 'B'
+            q_data[f'q_{q.id}'] = wrong_opt
 
     res = client.post(f'/quiz/{topic_id}/submit', data=q_data)
     assert res.status_code == 200
@@ -109,8 +110,8 @@ def test_adaptive_quiz_and_recommendation_flow(client):
 
     # 3. Retry quiz with correct answers
     with app.app_context():
-        high_q_data = {'difficulty_mix': '3 easy, 2 medium, 0 hard'}
-        for q in questions[:5]:
+        high_q_data = {'difficulty_mix': '6 easy, 3 medium, 1 hard'}
+        for q in questions[:10]:
             high_q_data[f'q_{q.id}'] = q.correct_option
 
     res2 = client.post(f'/quiz/{topic_id}/submit', data=high_q_data)
