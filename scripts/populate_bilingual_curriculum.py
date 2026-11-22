@@ -7,10 +7,9 @@ VTU Engineering Subjects:
 4. Basic Circuit Analysis (Network & Circuit Analysis)
 
 Performs:
-1. Schema migration to add 5-option (option_e) and Kannada parallel fields.
+1. Schema migration to verify database columns.
 2. Updates all 56 resources (Notes, Video, Worked Examples, Practice Sets) with authentic Kannada content and video streaming URLs.
-3. Upgrades existing questions with option_e and parallel Kannada translations.
-4. Adds expanded VTU 5-option questions across easy, medium, and hard difficulty levels.
+3. Synchronizes verified 4-option trilingual questions (EN, KN, HI) across easy, medium, and hard difficulty levels.
 """
 
 import os

@@ -39,7 +39,8 @@ load_dotenv(override=True)  # Load variables from .env into os.environ with over
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, session, jsonify, abort, g
+    url_for, flash, session, jsonify, abort, g,
+    send_from_directory
 )
 
 from models import (
@@ -703,9 +704,12 @@ def api_quiz_questions(topic_id):
     })
 
 
-@app.route('/quiz/<int:topic_id>/submit', methods=['POST'])
+@app.route('/quiz/<int:topic_id>/submit', methods=['GET', 'POST'])
 @login_required
 def submit_quiz(topic_id):
+    if request.method == 'GET':
+        return redirect(url_for('take_quiz', topic_id=topic_id))
+
     topic = db.session.get(Topic, topic_id)
     if not topic:
         abort(404)
@@ -1082,10 +1086,13 @@ def teacher_dashboard():
     )
 
 
-@app.route('/teacher/clear-student-data', methods=['POST'])
-@app.route('/faculty/clear-student-data', methods=['POST'])
+@app.route('/teacher/clear-student-data', methods=['GET', 'POST'])
+@app.route('/faculty/clear-student-data', methods=['GET', 'POST'])
 @faculty_required
 def clear_student_data():
+    if request.method == 'GET':
+        return redirect(url_for('teacher_dashboard'))
+
     action = request.form.get('action', 'clear_all')
     student_id = request.form.get('student_id', type=int)
 
@@ -1134,11 +1141,23 @@ def clear_student_data():
     return redirect(url_for('teacher_dashboard'))
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.svg', mimetype='image/svg+xml')
+
+
 # -----------------------------------------------------------------------------
 # Multilingual AI-Integrated Chatbot JSON API
 # -----------------------------------------------------------------------------
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['GET', 'POST'])
 def api_chat():
+    if request.method == 'GET':
+        return jsonify({
+            'status': 'active',
+            'service': 'Learnloop Multilingual AI Chatbot',
+            'languages': ['en', 'hi', 'kn']
+        })
+
     data = request.get_json() or {}
     query_text = data.get('message', '').strip()
     requested_lang = data.get('lang', session.get('preferred_language', 'en'))
@@ -1167,8 +1186,11 @@ def api_chat():
     })
 
 
-@app.route('/api/set-api-key', methods=['POST'])
+@app.route('/api/set-api-key', methods=['GET', 'POST'])
 def api_set_key():
+    if request.method == 'GET':
+        return jsonify({'has_key': bool(session.get('ai_api_key'))})
+
     data = request.get_json() or {}
     key = data.get('api_key', '').strip()
     if key:
@@ -1186,6 +1208,13 @@ def api_set_key():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Method Not Allowed', 'message': 'The method is not allowed for the requested URL.'}), 405
+    return redirect(url_for('index'))
 
 
 @app.errorhandler(500)

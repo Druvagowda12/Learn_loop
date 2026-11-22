@@ -3,7 +3,7 @@ Integration and Unit Tests for Bilingual English & Kannada Curriculum
 Validates:
 1. Language-exclusive notes filtering (EN vs KN).
 2. Dynamic video URL switching for all topics.
-3. 5-Option quiz schema (A-E, numeric 0-4 correct_index).
+3. Strict 4-Option quiz schema (A-D, numeric 0-3 correct_index).
 4. Difficulty tiers (easy, medium, hard) and multilingual API endpoint.
 """
 

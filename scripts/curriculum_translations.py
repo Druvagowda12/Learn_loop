@@ -12,7 +12,6 @@ from collections import Counter
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from scripts.convert_existing_to_4_options import convert_questions
 from scripts.translations_c_prog import C_PROGRAMMING_QUESTIONS
 from scripts.translations_digital_elec import DIGITAL_ELECTRONICS_QUESTIONS
 from scripts.translations_eng_math import ENGINEERING_MATH_QUESTIONS
@@ -23,7 +22,7 @@ from scripts.expanded_digital_elec import EXPANDED_DE_QUESTIONS
 from scripts.expanded_eng_math import EXPANDED_MATH_QUESTIONS
 from scripts.expanded_circuits import EXPANDED_CIRCUITS_QUESTIONS
 
-EXISTING_4_OPTIONS = convert_questions(
+EXISTING_4_OPTIONS = (
     C_PROGRAMMING_QUESTIONS +
     DIGITAL_ELECTRONICS_QUESTIONS +
     ENGINEERING_MATH_QUESTIONS +

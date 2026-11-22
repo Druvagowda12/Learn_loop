@@ -118,6 +118,11 @@ def test_adaptive_quiz_and_recommendation_flow(client):
         for q in questions[:10]:
             high_q_data[f'q_{q.id}'] = q.correct_option
 
+    # Test GET on submit route safely redirects to take_quiz
+    get_submit = client.get(f'/quiz/{topic_id}/submit', follow_redirects=False)
+    assert get_submit.status_code == 302
+    assert f'/quiz/{topic_id}' in get_submit.headers.get('Location', '')
+
     res2 = client.post(f'/quiz/{topic_id}/submit', data=high_q_data)
     assert res2.status_code == 200
     assert b"100" in res2.data or b"80" in res2.data

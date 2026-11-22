@@ -93,7 +93,7 @@ class Question(BaseModel):
     option_d_kn = db.Column(db.Text, nullable=True)
     option_e_kn = db.Column(db.Text, nullable=True)
     explanation_kn = db.Column(db.Text, nullable=True)
-    subtopic_kn = db.Column(db.String(100), nullable=True)
+    subtopic_kn = db.Column(db.String(255), nullable=True)
 
     # Hindi parallel content fields
     text_hi = db.Column(db.Text, nullable=True)
@@ -103,7 +103,7 @@ class Question(BaseModel):
     option_d_hi = db.Column(db.Text, nullable=True)
     option_e_hi = db.Column(db.Text, nullable=True)
     explanation_hi = db.Column(db.Text, nullable=True)
-    subtopic_hi = db.Column(db.String(100), nullable=True)
+    subtopic_hi = db.Column(db.String(255), nullable=True)
 
     @property
     def correct_index(self) -> int:
@@ -309,7 +309,7 @@ class QuizAttempt(BaseModel):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     subject = db.Column(db.String(120), nullable=False)
     topic = db.Column(db.String(150), nullable=False)
-    difficulty = db.Column(db.String(10), nullable=False)
+    difficulty = db.Column(db.String(100), nullable=False)
     score_percent = db.Column(db.Float, nullable=False)
     weak_topics = db.Column(db.Text, nullable=True)  # JSON string or comma list
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
