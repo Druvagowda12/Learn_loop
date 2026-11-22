@@ -47,7 +47,7 @@ from models import (
     db, User, Subject, Topic, Question,
     Attempt, AttemptAnswer, TopicProgress,
     Resource, ResourceView, ChatLog, utc_now,
-    QuizAttempt, LessonProgress
+    QuizAttempt, LessonProgress, Certificate
 )
 
 from engine import (
@@ -1096,49 +1096,78 @@ def clear_student_data():
     action = request.form.get('action', 'clear_all')
     student_id = request.form.get('student_id', type=int)
 
-    if action == 'clear_all':
-        # Clear all attempts, attempt answers, topic progress, resource views, and LMS tracking
-        AttemptAnswer.query.delete()
-        Attempt.query.delete()
-        TopicProgress.query.delete()
-        ResourceView.query.delete()
-        QuizAttempt.query.delete()
-        LessonProgress.query.delete()
-        db.session.commit()
-        flash("All student diagnostic quiz records, attempt histories, and progress data have been cleared successfully.", "success")
-        return redirect(url_for('teacher_dashboard'))
-
-    elif action == 'reset_student' and student_id:
-        student = db.session.get(User, student_id)
-        if student and student.role == 'student':
-            student_attempts = Attempt.query.filter_by(user_id=student.id).all()
-            for att in student_attempts:
-                db.session.delete(att)
-            TopicProgress.query.filter_by(user_id=student.id).delete()
-            ResourceView.query.filter_by(user_id=student.id).delete()
-            QuizAttempt.query.filter_by(user_id=student.id).delete()
-            LessonProgress.query.filter_by(user_id=student.id).delete()
+    try:
+        if action == 'clear_all':
+            # Clear all attempts, attempt answers, topic progress, resource views, certificates, and LMS tracking
+            AttemptAnswer.query.delete(synchronize_session=False)
+            Attempt.query.delete(synchronize_session=False)
+            TopicProgress.query.delete(synchronize_session=False)
+            ResourceView.query.delete(synchronize_session=False)
+            QuizAttempt.query.delete(synchronize_session=False)
+            LessonProgress.query.delete(synchronize_session=False)
+            Certificate.query.delete(synchronize_session=False)
             db.session.commit()
-            flash(f"Progress and attempt records for student '{student.name}' have been cleared.", "success")
-        else:
-            flash("Student record not found or cannot be modified.", "error")
-        return redirect(url_for('teacher_dashboard'))
+            flash("All student diagnostic quiz records, attempt histories, and progress data have been cleared successfully.", "success")
+            return redirect(url_for('teacher_dashboard'))
 
-    elif action == 'delete_student' and student_id:
-        student = db.session.get(User, student_id)
-        if student and student.role == 'student':
+        elif action == 'reset_student' and student_id:
+            student = db.session.get(User, student_id)
+            if not student or student.role not in ('student',):
+                flash("Student record not found or cannot be modified.", "error")
+                return redirect(url_for('teacher_dashboard'))
+
+            # 1. Delete dependent AttemptAnswers for student's attempts first (FK constraint)
+            student_attempt_ids = [a.id for a in Attempt.query.filter_by(user_id=student.id).all()]
+            if student_attempt_ids:
+                AttemptAnswer.query.filter(AttemptAnswer.attempt_id.in_(student_attempt_ids)).delete(synchronize_session=False)
+
+            # 2. Delete all other dependent child records in safe order
+            Attempt.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            QuizAttempt.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            LessonProgress.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            Certificate.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            TopicProgress.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            ResourceView.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+
+            db.session.commit()
+            flash(f"Progress and attempt records for student '{student.name}' have been reset to zero successfully.", "success")
+            return redirect(url_for('teacher_dashboard'))
+
+        elif action == 'delete_student' and student_id:
+            student = db.session.get(User, student_id)
+            if not student or student.role not in ('student',):
+                flash("Student record not found or cannot be deleted.", "error")
+                return redirect(url_for('teacher_dashboard'))
+
             name = student.name
-            QuizAttempt.query.filter_by(user_id=student.id).delete()
-            LessonProgress.query.filter_by(user_id=student.id).delete()
+            # 1. Delete dependent AttemptAnswers for student's attempts first (FK constraint)
+            student_attempt_ids = [a.id for a in Attempt.query.filter_by(user_id=student.id).all()]
+            if student_attempt_ids:
+                AttemptAnswer.query.filter(AttemptAnswer.attempt_id.in_(student_attempt_ids)).delete(synchronize_session=False)
+
+            # 2. Delete all other dependent child records in safe order
+            Attempt.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            QuizAttempt.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            LessonProgress.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            Certificate.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            TopicProgress.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+            ResourceView.query.filter_by(user_id=student.id).delete(synchronize_session=False)
+
+            # 3. Delete parent User record
             db.session.delete(student)
             db.session.commit()
-            flash(f"Student account '{name}' and all associated records have been removed successfully.", "success")
-        else:
-            flash("Cannot delete this user account.", "error")
-        return redirect(url_for('teacher_dashboard'))
 
-    flash("Invalid action specified.", "error")
-    return redirect(url_for('teacher_dashboard'))
+            flash(f"Student account '{name}' and all associated records have been removed successfully.", "success")
+            return redirect(url_for('teacher_dashboard'))
+
+        else:
+            flash("Invalid action specified.", "error")
+            return redirect(url_for('teacher_dashboard'))
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"An error occurred while updating student data: {str(e)}", "error")
+        return redirect(url_for('teacher_dashboard'))
 
 
 @app.route('/favicon.ico')

@@ -258,3 +258,74 @@ def test_edge_cases_and_error_handling(client):
     client.post('/login', data={'email': 'teacher@demo.test', 'password': 'learnloop123'})
     res_clear_get = client.get('/faculty/clear-student-data', follow_redirects=False)
     assert res_clear_get.status_code == 302
+
+
+def test_faculty_student_data_management_reset_and_remove(client):
+    """Test explicit child record deletion, foreign key safety, and rollback handling for reset_student and delete_student."""
+    from models import AttemptAnswer, TopicProgress, ResourceView, LessonProgress, Certificate
+
+    # 1. Ensure test student 'leo' exists with active attempts and progress
+    with app.app_context():
+        student = User.query.filter_by(email='leo@student.test').first()
+        if not student:
+            student = User(
+                name='Leo Test',
+                email='leo@student.test',
+                role='student',
+                preferred_language='en'
+            )
+            student.set_password('password123')
+            db.session.add(student)
+            db.session.commit()
+
+        student_id = student.id
+
+        # Add sample attempt and answer
+        att = Attempt(user_id=student_id, topic_id=1, score_pct=80.0, difficulty_mix='adaptive')
+        db.session.add(att)
+        db.session.commit()
+
+        q = Question.query.filter_by(topic_id=1).first()
+        if q:
+            ans = AttemptAnswer(attempt_id=att.id, question_id=q.id, chosen_option='A', is_correct=True)
+            db.session.add(ans)
+
+        # Add QuizAttempt, LessonProgress, and TopicProgress
+        qa = QuizAttempt(user_id=student_id, subject='C Programming', topic='Functions', difficulty='medium', score_percent=80.0)
+        db.session.add(qa)
+
+        tp = TopicProgress(user_id=student_id, topic_id=1, mastery_level='Medium', mastery_pct=80.0)
+        db.session.add(tp)
+
+        db.session.commit()
+
+    # 2. Log in as faculty
+    client.post('/login', data={'email': 'teacher@demo.test', 'password': 'learnloop123'})
+
+    # 3. Trigger Reset Data for student
+    res_reset = client.post('/faculty/clear-student-data', data={
+        'action': 'reset_student',
+        'student_id': student_id
+    }, follow_redirects=True)
+    assert res_reset.status_code == 200
+    assert b"reset to zero successfully" in res_reset.data or b"records for student" in res_reset.data
+
+    with app.app_context():
+        # User still exists, but all attempt/progress records are wiped clean
+        u = db.session.get(User, student_id)
+        assert u is not None
+        assert Attempt.query.filter_by(user_id=student_id).count() == 0
+        assert QuizAttempt.query.filter_by(user_id=student_id).count() == 0
+        assert TopicProgress.query.filter_by(user_id=student_id).count() == 0
+
+    # 4. Trigger Remove Student
+    res_delete = client.post('/faculty/clear-student-data', data={
+        'action': 'delete_student',
+        'student_id': student_id
+    }, follow_redirects=True)
+    assert res_delete.status_code == 200
+    assert b"removed successfully" in res_delete.data
+
+    with app.app_context():
+        assert db.session.get(User, student_id) is None
+

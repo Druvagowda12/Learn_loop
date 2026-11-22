@@ -29,6 +29,9 @@ class User(BaseModel):
     attempts = db.relationship('Attempt', backref='user', lazy=True, cascade='all, delete-orphan')
     progress = db.relationship('TopicProgress', backref='user', lazy=True, cascade='all, delete-orphan')
     resource_views = db.relationship('ResourceView', backref='user', lazy=True, cascade='all, delete-orphan')
+    quiz_attempts = db.relationship('QuizAttempt', backref='user', lazy=True, cascade='all, delete-orphan')
+    lesson_progress = db.relationship('LessonProgress', backref='user', lazy=True, cascade='all, delete-orphan')
+    certificates = db.relationship('Certificate', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -368,7 +371,6 @@ class LessonProgress(BaseModel):
     completed = db.Column(db.Boolean, default=False, nullable=False)
     completed_at = db.Column(db.DateTime, nullable=True)
     # relationship backrefs
-    user = db.relationship('User', backref='lesson_progress')
     lesson = db.relationship('Lesson', backref='progress_records')
 
 class Certificate(BaseModel):
@@ -379,7 +381,6 @@ class Certificate(BaseModel):
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
     issued_at = db.Column(db.DateTime, default=utc_now, nullable=False)
     cert_uuid = db.Column(db.String(36), unique=True, nullable=False)
-    user = db.relationship('User', backref='certificates')
     course = db.relationship('Course', backref='certificates')
 
 # ---------- End New LMS Models ----------
