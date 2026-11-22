@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if is_new %}Add New Study Notes{% else %}Edit Study Notes: {{ resource.topic.name }}{% endif %} · Faculty Portal
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+
+  <!-- Breadcrumbs & Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-xs text-gray-500">
+      <a href="{{ url_for('teacher_dashboard') }}" class="hover:text-[#1a6b5f] font-semibold flex items-center gap-1">
+        <span>← Back to Faculty Oversight</span>
+      </a>
+      <span>/</span>
+      <span class="text-gray-700 font-medium">{% if is_new %}Create Note{% else %}Edit Note #{{ resource.id }}{% endif %}</span>
+    </div>
+
+    {% if not is_new %}
+    <a href="{{ url_for('view_resource', resource_id=resource.id) }}" target="_blank"
+       class="btn-secondary text-xs font-semibold px-3 py-1.5 flex items-center gap-1">
+      <span>Preview in Student Reader ↗</span>
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="card-learnloop p-6 sm:p-10 border-[#e2dacd]">
+    <div class="border-b border-[#ede6da] pb-6 mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <span class="eyebrow">Faculty Curriculum Management</span>
+        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#10222c] mt-1">
+          {% if is_new %}Create New Study Notes{% else %}Edit Notes: {{ resource.topic.name }}{% endif %}
+        </h1>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1.5">
+          Author and manage complete, 4-section VTU study notes across English, Kannada, and Hindi.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+          Markdown & LaTeX Enabled
+        </span>
+      </div>
+    </div>
+
+    <form method="POST" action="{% if is_new %}{{ url_for('faculty_create_notes') }}{% else %}{{ url_for('faculty_edit_notes', resource_id=resource.id) }}{% endif %}" class="space-y-8">
+
+      <!-- Topic Selection (For New Notes or Topic Info) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#fbf8f1] p-5 rounded-2xl border border-[#e2dacd]">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+            Target Topic <span class="text-red-500">*</span>
+          </label>
+          {% if is_new %}
+          <select name="topic_id" required class="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+            {% for t in all_topics %}
+            <option value="{{ t.id }}">{{ t.subject.name }} → {{ t.name }}</option>
+            {% endfor %}
+          </select>
+          {% else %}
+          <div class="p-2.5 bg-white rounded-xl border border-gray-200 text-xs sm:text-sm font-semibold text-[#10222c]">
+            {{ resource.topic.subject.name }} → {{ resource.topic.name }}
+          </div>
+          {% endif %}
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
+            Difficulty Tier & Target Level
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <select name="difficulty" class="text-xs sm:text-sm p-2.5 rounded-xl border border-gray-300 bg-white">
+              <option value="easy" {% if resource and resource.difficulty == 'easy' %}selected{% endif %}>Easy (Foundation)</option>
+              <option value="medium" {% if resource and resource.difficulty == 'medium' %}selected{% endif %}>Medium (Core)</option>
+              <option value="hard" {% if resource and resource.difficulty == 'hard' %}selected{% endif %}>Hard (Advanced)</option>
+            </select>
+            <select name="target_level" class="text-xs sm:text-sm p-2.5 rounded-xl border border-gray-300 bg-white">
+              <option value="low" {% if resource and resource.target_level == 'low' %}selected{% endif %}>Target: Low Mastery</option>
+              <option value="medium" {% if resource and resource.target_level == 'medium' %}selected{% endif %}>Target: Medium Mastery</option>
+              <option value="high" {% if resource and resource.target_level == 'high' %}selected{% endif %}>Target: High Mastery</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Switch Tabs for Editor -->
+      <div class="border-b border-[#e2dacd]">
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="switchEditorTab('en')" id="tab-btn-en"
+                  class="editor-tab-btn px-4 py-2.5 border-b-2 font-bold text-xs sm:text-sm border-[#1a6b5f] text-[#1a6b5f] flex items-center gap-1.5 transition">
+            <span class="w-2 h-2 rounded-full bg-[#1a6b5f]"></span>
+            <span>English (EN)</span>
+          </button>
+          <button type="button" onclick="switchEditorTab('kn')" id="tab-btn-kn"
+                  class="editor-tab-btn px-4 py-2.5 border-b-2 font-semibold text-xs sm:text-sm border-transparent text-gray-500 hover:text-black flex items-center gap-1.5 transition">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>ಕನ್ನಡ (KN)</span>
+          </button>
+          <button type="button" onclick="switchEditorTab('hi')" id="tab-btn-hi"
+                  class="editor-tab-btn px-4 py-2.5 border-b-2 font-semibold text-xs sm:text-sm border-transparent text-gray-500 hover:text-black flex items-center gap-1.5 transition">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>हिन्दी (HI)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: ENGLISH -->
+      <div id="editor-pane-en" class="space-y-6">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            English Title <span class="text-red-500">*</span>
+          </label>
+          <input type="text" name="title" required
+                 value="{{ resource.title if resource else '' }}"
+                 placeholder="e.g. Comprehensive Study Notes: Arrays in C"
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            English Subtitle / Short Description
+          </label>
+          <input type="text" name="description"
+                 value="{{ resource.description if resource else '' }}"
+                 placeholder="Brief 1-line summary for student recommendation cards..."
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+              Complete English Study Notes Content (Markdown) <span class="text-red-500">*</span>
+            </label>
+            <span class="text-[11px] text-gray-400 font-mono">Structured in 4 sections: 1. Concept, 2. Rules, 3. Example, 4. Quick-Check</span>
+          </div>
+          <textarea name="content" rows="18" required
+                    class="w-full font-mono text-xs sm:text-sm p-4 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none leading-relaxed">{{ resource.content if resource else '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- TAB 2: KANNADA -->
+      <div id="editor-pane-kn" class="space-y-6 hidden">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            ಕನ್ನಡ ಶೀರ್ಷಿಕೆ (Kannada Title)
+          </label>
+          <input type="text" name="title_kn"
+                 value="{{ resource.title_kn if resource else '' }}"
+                 placeholder="ಉದಾ: ಸಮಗ್ರ ಅಧ್ಯಯನ ಟಿಪ್ಪಣಿಗಳು: ಸಿ ಭಾಷೆಯಲ್ಲಿ ಅರೇಗಳು"
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            ಕನ್ನಡ ವಿವರಣೆ (Kannada Description)
+          </label>
+          <input type="text" name="description_kn"
+                 value="{{ resource.description_kn if resource else '' }}"
+                 placeholder="ಕನ್ನಡದಲ್ಲಿ ಸಂಕ್ಷಿಪ್ತ ಸಾರಾಂಶ..."
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+              ಕನ್ನಡ ಪೂರ್ಣ ಟಿಪ್ಪಣಿಗಳು (Kannada Study Notes Content)
+            </label>
+            <span class="text-[11px] text-gray-400 font-mono">4 ವಿಭಾಗಗಳು: 1. ವಿವರಣೆ, 2. ನಿಯಮಗಳು, 3. ಉದಾಹರಣೆ, 4. ಪರೀಕ್ಷಾ ಪಾಯಿಂಟ್ಸ್</span>
+          </div>
+          <textarea name="content_kn" rows="18"
+                    class="w-full font-mono text-xs sm:text-sm p-4 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none leading-relaxed">{{ resource.content_kn if resource else '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- TAB 3: HINDI -->
+      <div id="editor-pane-hi" class="space-y-6 hidden">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            हिन्दी शीर्षक (Hindi Title)
+          </label>
+          <input type="text" name="title_hi"
+                 value="{{ resource.title_hi if resource else '' }}"
+                 placeholder="उदा: विस्तृत अध्ययन नोट्स: सी में एरे"
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            हिन्दी विवरण (Hindi Description)
+          </label>
+          <input type="text" name="description_hi"
+                 value="{{ resource.description_hi if resource else '' }}"
+                 placeholder="संक्षिप्त विवरण..."
+                 class="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+              हिन्दी सम्पूर्ण नोट्स (Hindi Study Notes Content)
+            </label>
+            <span class="text-[11px] text-gray-400 font-mono">4 खंड: 1. विवरण, 2. सूत्र व नियम, 3. उदाहरण, 4. परीक्षा चेकपॉइंट</span>
+          </div>
+          <textarea name="content_hi" rows="18"
+                    class="w-full font-mono text-xs sm:text-sm p-4 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-[#1a6b5f] focus:outline-none leading-relaxed">{{ resource.content_hi if resource else '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="pt-6 border-t border-[#ede6da] flex flex-wrap items-center justify-between gap-4">
+        <a href="{{ url_for('teacher_dashboard') }}" class="btn-secondary text-xs font-semibold px-4 py-2.5">
+          Cancel & Return
+        </a>
+
+        <div class="flex items-center gap-3">
+          <button type="submit" class="btn-primary text-xs sm:text-sm font-bold px-6 py-2.5 shadow-md">
+            {% if is_new %}Publish New Study Notes{% else %}Save & Update Study Notes{% endif %} →
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+function switchEditorTab(lang) {
+  // Hide all panes
+  ['en', 'kn', 'hi'].forEach(l => {
+    const pane = document.getElementById(`editor-pane-${l}`);
+    const btn = document.getElementById(`tab-btn-${l}`);
+    if (pane) pane.classList.add('hidden');
+    if (btn) {
+      btn.className = "editor-tab-btn px-4 py-2.5 border-b-2 font-semibold text-xs sm:text-sm border-transparent text-gray-500 hover:text-black flex items-center gap-1.5 transition";
+    }
+  });
+
+  // Show active pane
+  const activePane = document.getElementById(`editor-pane-${lang}`);
+  const activeBtn = document.getElementById(`tab-btn-${lang}`);
+  if (activePane) activePane.classList.remove('hidden');
+  if (activeBtn) {
+    activeBtn.className = "editor-tab-btn px-4 py-2.5 border-b-2 font-bold text-xs sm:text-sm border-[#1a6b5f] text-[#1a6b5f] flex items-center gap-1.5 transition";
+  }
+}
+</script>
+{% endblock %}

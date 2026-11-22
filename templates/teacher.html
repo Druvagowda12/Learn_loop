@@ -240,5 +240,116 @@
     </div>
   </section>
 
+  <!-- Section 3: VTU Curriculum & Study Notes Management -->
+  <section class="space-y-4 mb-10">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-5 rounded-full bg-[#1a6b5f]"></div>
+          <h2 class="text-lg font-bold text-[#10222c]">Curriculum & Study Notes Management</h2>
+        </div>
+        <p class="text-xs text-gray-500 font-medium mt-0.5">
+          Edit VTU engineering study notes and review 4-section trilingual coverage across English, Kannada, and Hindi.
+        </p>
+      </div>
+
+      <a href="{{ url_for('faculty_create_notes') }}"
+         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#1a6b5f] text-white hover:bg-[#134e45] transition shadow-sm active:scale-95">
+        <svg class="w-4 h-4 text-[#e8a33d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>+ Add New Study Note</span>
+      </a>
+    </div>
+
+    <div class="card-learnloop overflow-hidden border-[#e2dacd]">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-[#e2dacd] bg-[#fbf8f1] text-[10px] uppercase font-bold text-gray-600 tracking-wider">
+              <th class="p-3.5 pl-5">Subject / Topic</th>
+              <th class="p-3.5">Difficulty</th>
+              <th class="p-3.5">English (EN)</th>
+              <th class="p-3.5">Kannada (KN)</th>
+              <th class="p-3.5">Hindi (HI)</th>
+              <th class="p-3.5 pr-5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#ede6da] text-xs">
+            {% for note in all_notes %}
+            <tr class="hover:bg-[#fcfaf6] transition">
+              <td class="p-3.5 pl-5">
+                <span class="text-[10px] uppercase font-bold text-[#1a6b5f] block">
+                  {{ note.topic.subject.name if note.topic and note.topic.subject else 'General' }}
+                </span>
+                <span class="font-bold text-[#10222c] text-sm">
+                  {{ note.topic.name if note.topic else note.title }}
+                </span>
+              </td>
+              <td class="p-3.5">
+                <span class="capitalize px-2 py-0.5 rounded text-[10px] font-bold
+                  {% if note.difficulty == 'hard' %}bg-red-50 text-red-700 border border-red-200
+                  {% elif note.difficulty == 'medium' %}bg-amber-50 text-amber-700 border border-amber-200
+                  {% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                  {{ note.difficulty }}
+                </span>
+              </td>
+              <td class="p-3.5">
+                {% if note.content and note.content|length > 100 %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Ready ({{ note.content|length }} chars)
+                </span>
+                {% else %}
+                <span class="text-[11px] text-gray-400 italic">Empty</span>
+                {% endif %}
+              </td>
+              <td class="p-3.5">
+                {% if note.content_kn and note.content_kn|length > 50 %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Ready ({{ note.content_kn|length }} chars)
+                </span>
+                {% else %}
+                <span class="text-[11px] text-gray-400 italic">Empty</span>
+                {% endif %}
+              </td>
+              <td class="p-3.5">
+                {% if note.content_hi and note.content_hi|length > 50 %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Ready ({{ note.content_hi|length }} chars)
+                </span>
+                {% else %}
+                <span class="text-[11px] text-gray-400 italic">Empty</span>
+                {% endif %}
+              </td>
+              <td class="p-3.5 pr-5 text-right">
+                <div class="inline-flex items-center gap-2">
+                  <a href="{{ url_for('faculty_edit_notes', resource_id=note.id) }}"
+                     class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#1a6b5f] text-white hover:bg-[#134e45] transition shadow-sm">
+                    Edit Notes
+                  </a>
+                  <a href="{{ url_for('view_resource', resource_id=note.id) }}" target="_blank"
+                     class="px-2 py-1 rounded-lg text-[11px] font-medium text-gray-600 hover:text-black border border-gray-200 hover:bg-gray-50 transition"
+                     title="Preview in Student Reader">
+                    Preview ↗
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="p-6 text-center text-gray-500 italic">
+                No study notes registered. Click "+ Add New Study Note" to create one.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
 </div>
 {% endblock %}

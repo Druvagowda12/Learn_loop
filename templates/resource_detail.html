@@ -30,6 +30,11 @@
                 class="px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
           ಕನ್ನಡ (KN)
         </button>
+        <button type="button" 
+                onclick="switchLanguage('hi')" 
+                class="px-2.5 py-1 rounded-lg font-bold transition-all {% if user_lang == 'hi' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-600 hover:text-black{% endif %}">
+          हिन्दी (HI)
+        </button>
       </div>
 
       <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded
@@ -53,8 +58,8 @@
         <span class="eyebrow">
           {% if user_lang == 'kn' %}ಕಲಿಕಾ ಸಂಪನ್ಮೂಲ{% else %}Learning Material{% endif %}
         </span>
-        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold {% if user_lang == 'kn' %}bg-amber-100 text-amber-900 border border-amber-300{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
-          {% if user_lang == 'kn' %}ಕನ್ನಡ ಆವೃತ್ತಿ ಸಕ್ರಿಯವಾಗಿದೆ{% else %}English Version Active{% endif %}
+        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold {% if user_lang == 'kn' %}bg-amber-100 text-amber-900 border border-amber-300{% elif user_lang == 'hi' %}bg-orange-100 text-orange-900 border border-orange-300{% else %}bg-emerald-50 text-emerald-800 border border-emerald-200{% endif %}">
+          {% if user_lang == 'kn' %}ಕನ್ನಡ ಆವೃತ್ತಿ ಸಕ್ರಿಯವಾಗಿದೆ{% elif user_lang == 'hi' %}हिन्दी संस्करण सक्रिय है{% else %}English Version Active{% endif %}
         </span>
       </div>
 
@@ -81,13 +86,18 @@
           <div class="flex gap-1.5">
             <button type="button" 
                     onclick="switchLanguage('en')"
-                    class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if user_lang != 'kn' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                    class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if (user_lang or 'en') == 'en' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
               EN English Lecture
             </button>
             <button type="button" 
                     onclick="switchLanguage('kn')"
                     class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if user_lang == 'kn' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
               KN ಕನ್ನಡ ಉಪನ್ಯಾಸ
+            </button>
+            <button type="button" 
+                    onclick="switchLanguage('hi')"
+                    class="text-xs font-semibold px-3 py-1 rounded-lg border transition-all {% if user_lang == 'hi' %}bg-[#1a6b5f] text-white border-[#1a6b5f] shadow-sm{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+              HI हिन्दी व्याख्यान
             </button>
           </div>
         </div>
@@ -138,9 +148,9 @@
     </div>
     {% endif %}
 
-    <!-- Strict Language-Exclusive Content Body -->
-    <div class="prose max-w-none text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line space-y-4 font-sans border-t border-[#ede6da] pt-6">
-      {{ resource.get_content(user_lang) or 'No text content available for this resource in the selected language.' }}
+    <!-- Rich VTU-Standard Study Notes Body -->
+    <div class="study-notes-body text-gray-800 text-sm sm:text-base leading-relaxed space-y-4 font-sans border-t border-[#ede6da] pt-6">
+      {{ (resource.get_content(user_lang) or 'No text content available for this resource in the selected language.') | render_notes | safe }}
     </div>
 
     <!-- Action Footer -->
@@ -153,6 +163,13 @@
       </div>
 
       <div class="flex items-center gap-3">
+        {% if session.get('role') in ['faculty', 'teacher'] %}
+        <a href="{{ url_for('faculty_edit_notes', resource_id=resource.id) }}"
+           class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-[#10222c] text-white hover:bg-[#1a6b5f] transition shadow-sm">
+          <svg class="w-3.5 h-3.5 text-[#e8a33d]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          <span>Edit Study Notes</span>
+        </a>
+        {% endif %}
         <a href="{{ url_for('resources') }}" class="btn-secondary text-xs font-semibold px-4 py-2" data-i18n="back_to_repository">
           {{ _('back_to_repository') }}
         </a>

@@ -329,3 +329,95 @@ def test_faculty_student_data_management_reset_and_remove(client):
     with app.app_context():
         assert db.session.get(User, student_id) is None
 
+
+def test_trilingual_study_notes_reader(client):
+    """Verify that resource study notes render cleanly across EN, KN, and HI."""
+    with app.app_context():
+        note = Resource.query.filter_by(type='notes').first()
+        assert note is not None
+        note_id = note.id
+
+    # Test English
+    res_en = client.get(f'/resource/{note_id}?lang=en')
+    assert res_en.status_code == 200
+    assert b"English Version Active" in res_en.data or b"English" in res_en.data
+    assert b"study-notes-body" in res_en.data
+
+    # Test Kannada
+    res_kn = client.get(f'/resource/{note_id}?lang=kn')
+    assert res_kn.status_code == 200
+    assert b"study-notes-body" in res_kn.data
+
+    # Test Hindi
+    res_hi = client.get(f'/resource/{note_id}?lang=hi')
+    assert res_hi.status_code == 200
+    assert b"study-notes-body" in res_hi.data
+
+
+def test_faculty_study_notes_crud(client):
+    """Verify that faculty can edit existing study notes and create new ones, while students are blocked."""
+    with app.app_context():
+        note = Resource.query.filter_by(type='notes').first()
+        assert note is not None
+        note_id = note.id
+
+    # 1. Unauthenticated or student access should be blocked (403)
+    res_blocked = client.get(f'/faculty/notes/edit/{note_id}')
+    assert res_blocked.status_code == 403
+
+    # Student logged in
+    client.post('/login', data={'email': 'student@demo.test', 'password': 'learnloop123'})
+    res_student_blocked = client.get(f'/faculty/notes/edit/{note_id}')
+    assert res_student_blocked.status_code == 403
+    client.get('/logout')
+
+    # 2. Faculty logged in can access editor
+    client.post('/login', data={'email': 'teacher@demo.test', 'password': 'learnloop123'})
+    res_faculty_get = client.get(f'/faculty/notes/edit/{note_id}')
+    assert res_faculty_get.status_code == 200
+    assert b"Edit Notes" in res_faculty_get.data
+
+    # 3. Faculty POST edit
+    res_faculty_post = client.post(f'/faculty/notes/edit/{note_id}', data={
+        'difficulty': 'hard',
+        'target_level': 'high',
+        'title': 'Updated Comprehensive Study Notes',
+        'title_kn': 'ನವೀಕರಿಸಿದ ಸಮಗ್ರ ಟಿಪ್ಪಣಿಗಳು',
+        'title_hi': 'अद्यतनित व्यापक अध्ययन नोट्स',
+        'description': 'Updated description for testing.',
+        'description_kn': 'ಕನ್ನಡ ವಿವರಣೆ',
+        'description_hi': 'हिन्दी विवरण',
+        'content': '### 1. Detailed Concept Explanation\nUpdated content text for test.',
+        'content_kn': '### 1. ವಿವರವಾದ ಪರಿಕಲ್ಪನೆ ವಿವರಣೆ\nಕನ್ನಡ ಪಠ್ಯ.',
+        'content_hi': '### 1. विस्तृत अवधारणा व्याख्या\nहिन्दी पाठ।'
+    }, follow_redirects=True)
+    assert res_faculty_post.status_code == 200
+    assert b"updated successfully" in res_faculty_post.data
+
+    with app.app_context():
+        updated_note = db.session.get(Resource, note_id)
+        assert updated_note.title == 'Updated Comprehensive Study Notes'
+        assert updated_note.difficulty == 'hard'
+
+    # 4. Faculty create new note
+    res_create_get = client.get('/faculty/notes/create')
+    assert res_create_get.status_code == 200
+
+    res_create_post = client.post('/faculty/notes/create', data={
+        'topic_id': 1,
+        'difficulty': 'medium',
+        'target_level': 'medium',
+        'title': 'New Test Study Note',
+        'title_kn': 'ಹೊಸ ಟಿಪ್ಪಣಿ',
+        'title_hi': 'नया नोट',
+        'content': 'Test content in English',
+        'content_kn': 'ಕನ್ನಡ ಪಠ್ಯ',
+        'content_hi': 'हिन्दी पाठ'
+    }, follow_redirects=True)
+    assert res_create_post.status_code == 200
+
+    with app.app_context():
+        created = Resource.query.filter_by(title='New Test Study Note').first()
+        assert created is not None
+        assert created.topic_id == 1
+

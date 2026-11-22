@@ -377,3 +377,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ----------------------------------------------------------------------------
+// Copy Code to Clipboard for Study Notes Syntax Cards
+// ----------------------------------------------------------------------------
+function copyCode(btn) {
+  if (!btn) return;
+  const card = btn.closest('.code-card');
+  if (!card) return;
+  const pre = card.querySelector('pre');
+  if (!pre) return;
+  const text = pre.innerText || pre.textContent;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.innerText;
+      btn.innerText = 'Copied!';
+      btn.classList.add('text-emerald-400');
+      setTimeout(() => {
+        btn.innerText = original;
+        btn.classList.remove('text-emerald-400');
+      }, 2000);
+    }).catch(() => fallbackCopy(text, btn));
+  } else {
+    fallbackCopy(text, btn);
+  }
+}
+
+function fallbackCopy(text, btn) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const original = btn.innerText;
+    btn.innerText = 'Copied!';
+    btn.classList.add('text-emerald-400');
+    setTimeout(() => {
+      btn.innerText = original;
+      btn.classList.remove('text-emerald-400');
+    }, 2000);
+  } catch (err) {
+    console.error('Failed to copy code snippet:', err);
+  }
+}

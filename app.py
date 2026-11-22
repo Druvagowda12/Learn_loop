@@ -11,6 +11,8 @@ import json
 import sys
 import socket
 import urllib.request
+import html
+import re
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -290,10 +292,182 @@ def localize_text(text):
 
     return text
 
+
+def render_notes_markdown(text):
+    """Renders structured Markdown notes with syntax-highlighted code blocks, copy buttons, formula boxes, and checklists."""
+    if not text:
+        return ""
+
+    # 1. Protect code blocks ```lang ... ```
+    code_blocks = []
+    pattern = r'```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```'
+
+    def repl_code(match):
+        lang = match.group(1) or 'code'
+        code_content = match.group(2).strip()
+        escaped_code = html.escape(code_content)
+        block_html = (
+            f'<div class="code-block-wrapper my-5 rounded-2xl overflow-hidden border border-[#213947] bg-[#10222c] shadow-lg">'
+            f'  <div class="flex items-center justify-between px-4 py-2.5 bg-[#0c1b23] border-b border-[#1b303d] text-xs">'
+            f'    <div class="flex items-center gap-2">'
+            f'      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>'
+            f'      <span class="font-mono text-emerald-300 font-bold uppercase tracking-wider text-[11px]">{lang}</span>'
+            f'    </div>'
+            f'    <button type="button" onclick="copyCode(this)" class="copy-code-btn flex items-center gap-1.5 text-[11px] text-gray-300 hover:text-white transition px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 font-sans font-semibold">'
+            f'      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>'
+            f'      <span>Copy</span>'
+            f'    </button>'
+            f'  </div>'
+            f'  <pre class="p-4 sm:p-5 text-emerald-300 font-mono text-xs sm:text-[13px] leading-relaxed overflow-x-auto whitespace-pre"><code>{escaped_code}</code></pre>'
+            f'</div>'
+        )
+        code_blocks.append(block_html)
+        return f"<!--CODE_BLOCK_{len(code_blocks)-1}-->"
+
+    text = re.sub(pattern, repl_code, text)
+
+    # 2. Markdown Tables
+    lines = text.split('\n')
+    out_lines = []
+    in_table = False
+    table_lines = []
+
+    def flush_table(tbl):
+        if not tbl:
+            return ""
+        rows = []
+        for l in tbl:
+            if re.match(r'^\s*\|?\s*:?-+:?\s*\|', l):
+                continue
+            cols = [c.strip() for c in l.strip('|').split('|')]
+            rows.append(cols)
+        if not rows:
+            return ""
+        res = '<div class="overflow-x-auto my-5 shadow-sm rounded-xl border border-[#e2dacd]"><table class="min-w-full text-xs text-left">'
+        res += '<thead class="bg-[#ede6da] text-[#10222c] font-bold"><tr>'
+        for col in rows[0]:
+            res += f'<th class="px-4 py-3 border-b border-[#e2dacd]">{col}</th>'
+        res += '</tr></thead><tbody class="divide-y divide-[#ede6da] bg-white">'
+        for row in rows[1:]:
+            res += '<tr class="hover:bg-[#fffdf8] transition-colors">'
+            for cell in row:
+                res += f'<td class="px-4 py-2.5">{cell}</td>'
+            res += '</tr>'
+        res += '</tbody></table></div>'
+        return res
+
+    for line in lines:
+        if line.strip().startswith('|') and '|' in line.strip()[1:]:
+            table_lines.append(line)
+            in_table = True
+        else:
+            if in_table:
+                out_lines.append(flush_table(table_lines))
+                table_lines = []
+                in_table = False
+            out_lines.append(line)
+    if in_table:
+        out_lines.append(flush_table(table_lines))
+
+    text = '\n'.join(out_lines)
+
+    # 3. Math Callout Blocks ($$ ... $$)
+    text = re.sub(
+        r'\$\$(.*?)\$\$',
+        r'<div class="my-4 p-4 bg-amber-50/80 border-l-4 border-[#e8a33d] rounded-r-2xl font-mono text-xs sm:text-sm text-[#10222c] overflow-x-auto font-semibold shadow-xs leading-relaxed">\1</div>',
+        text,
+        flags=re.DOTALL
+    )
+
+    # 4. Inline Math ($ ... $)
+    text = re.sub(
+        r'\$([^\$\n]+)\$',
+        r'<span class="font-mono bg-amber-100/70 text-[#10222c] px-1.5 py-0.5 rounded font-semibold text-xs mx-0.5 shadow-2xs">\1</span>',
+        text
+    )
+
+    # 5. Numbered Section Headers (## 1., ## 2., ## 3., ## 4.)
+    text = re.sub(
+        r'^##\s+1\.\s+(.*)$',
+        r'<div class="pt-6 pb-2"><h2 class="text-lg sm:text-xl font-serif font-bold text-[#10222c] flex items-center gap-2.5 border-b-2 border-[#1a6b5f] pb-2.5"><span class="w-7 h-7 rounded-lg bg-[#1a6b5f] text-white flex items-center justify-center text-xs font-sans font-bold shadow-xs">1</span><span>\1</span></h2></div>',
+        text, flags=re.MULTILINE
+    )
+    text = re.sub(
+        r'^##\s+2\.\s+(.*)$',
+        r'<div class="pt-6 pb-2"><h2 class="text-lg sm:text-xl font-serif font-bold text-[#10222c] flex items-center gap-2.5 border-b-2 border-[#e8a33d] pb-2.5"><span class="w-7 h-7 rounded-lg bg-[#e8a33d] text-[#10222c] flex items-center justify-center text-xs font-sans font-bold shadow-xs">2</span><span>\1</span></h2></div>',
+        text, flags=re.MULTILINE
+    )
+    text = re.sub(
+        r'^##\s+3\.\s+(.*)$',
+        r'<div class="pt-6 pb-2"><h2 class="text-lg sm:text-xl font-serif font-bold text-[#10222c] flex items-center gap-2.5 border-b-2 border-blue-600 pb-2.5"><span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-sans font-bold shadow-xs">3</span><span>\1</span></h2></div>',
+        text, flags=re.MULTILINE
+    )
+    text = re.sub(
+        r'^##\s+4\.\s+(.*)$',
+        r'<div class="pt-6 pb-2"><h2 class="text-lg sm:text-xl font-serif font-bold text-[#10222c] flex items-center gap-2.5 border-b-2 border-emerald-600 pb-2.5"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs font-sans font-bold shadow-xs">4</span><span>\1</span></h2></div>',
+        text, flags=re.MULTILINE
+    )
+
+    # 6. General Subheadings
+    text = re.sub(r'^###\s+(.*)$', r'<h3 class="text-sm sm:text-base font-bold text-[#10222c] mt-5 mb-2 flex items-center gap-1.5"><span class="text-amber-600">▸</span> \1</h3>', text, flags=re.MULTILINE)
+    text = re.sub(r'^##\s+(.*)$', r'<h2 class="text-base sm:text-lg font-bold text-[#10222c] mt-6 mb-2 border-b border-[#ede6da] pb-1">\1</h2>', text, flags=re.MULTILINE)
+
+    # 7. Checkpoints: - [x] ...
+    text = re.sub(
+        r'^[•\-\*]\s+\[x\]\s+(.*)$',
+        r'<div class="flex items-start gap-3 my-2 p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs sm:text-sm text-gray-800 shadow-2xs"><span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">✓</span><div class="leading-relaxed">\1</div></div>',
+        text, flags=re.MULTILINE
+    )
+
+    # 8. Standard bullet points: - ...
+    text = re.sub(
+        r'^[•\-\*]\s+(.*)$',
+        r'<li class="ml-4 list-disc text-gray-700 my-1.5 text-xs sm:text-sm leading-relaxed">\1</li>',
+        text, flags=re.MULTILINE
+    )
+
+    # 9. Blockquotes (> ...)
+    text = re.sub(
+        r'^>\s+(.*)$',
+        r'<blockquote class="p-3.5 my-3.5 bg-[#ede6da]/60 border-l-4 border-[#1a6b5f] text-xs sm:text-sm text-gray-700 rounded-r-xl italic leading-relaxed">\1</blockquote>',
+        text, flags=re.MULTILINE
+    )
+
+    # 10. Bold & Inline Code
+    text = re.sub(r'\*\*([^*]+)\*\*', r'<strong class="font-bold text-[#10222c]">\1</strong>', text)
+    text = re.sub(r'`([^`]+)`', r'<code class="px-1.5 py-0.5 rounded font-mono text-xs bg-[#ede6da] text-[#10222c] font-semibold border border-[#dcd3c4]">\1</code>', text)
+
+    # 11. Horizontal divider
+    text = re.sub(r'^---$', r'<hr class="my-6 border-[#e2dacd]">', text, flags=re.MULTILINE)
+
+    # 12. Paragraph breaks
+    paragraphs = text.split('\n\n')
+    processed_p = []
+    for p in paragraphs:
+        p_strip = p.strip()
+        if not p_strip:
+            continue
+        if p_strip.startswith('<div') or p_strip.startswith('<table') or p_strip.startswith('<h') or p_strip.startswith('<!--CODE_BLOCK_') or p_strip.startswith('<blockquote') or p_strip.startswith('<hr'):
+            processed_p.append(p_strip)
+        elif p_strip.startswith('<li'):
+            processed_p.append(f'<ul class="my-2.5 space-y-1">{p_strip}</ul>')
+        else:
+            processed_p.append(f'<p class="text-xs sm:text-sm text-gray-700 leading-relaxed my-2">{p_strip.replace(chr(10), "<br>")}</p>')
+
+    result = '\n'.join(processed_p)
+
+    # Restore code blocks
+    for i, cb in enumerate(code_blocks):
+        result = result.replace(f"<!--CODE_BLOCK_{i}-->", cb)
+
+    return result
+
 # expose _ and localize to Jinja templates
 app.jinja_env.globals['_'] = _
 app.jinja_env.filters['localize'] = localize_text
 app.jinja_env.globals['localize'] = localize_text
+app.jinja_env.filters['render_notes'] = render_notes_markdown
+app.jinja_env.globals['render_notes'] = render_notes_markdown
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
@@ -1089,10 +1263,14 @@ def teacher_dashboard():
             'subject_summary': subject_summary
         })
 
+    # 3. All Notes for Curriculum Management
+    all_notes = Resource.query.filter_by(type='notes').order_by(Resource.topic_id).all()
+
     return render_template(
         'teacher.html',
         topic_stats=topic_stats,
-        student_summaries=student_summaries
+        student_summaries=student_summaries,
+        all_notes=all_notes
     )
 
 
@@ -1178,6 +1356,86 @@ def clear_student_data():
         db.session.rollback()
         flash(f"An error occurred while updating student data: {str(e)}", "error")
         return redirect(url_for('teacher_dashboard'))
+
+
+# -----------------------------------------------------------------------------
+# Faculty Study Notes & Curriculum Editor Routes
+# -----------------------------------------------------------------------------
+@app.route('/faculty/notes/edit/<int:resource_id>', methods=['GET', 'POST'])
+@faculty_required
+def faculty_edit_notes(resource_id):
+    resource = db.session.get(Resource, resource_id)
+    if not resource:
+        abort(404)
+
+    if request.method == 'POST':
+        resource.difficulty = request.form.get('difficulty', resource.difficulty or 'medium')
+        resource.target_level = request.form.get('target_level', resource.target_level or 'medium')
+        resource.title = request.form.get('title', resource.title)
+        resource.title_kn = request.form.get('title_kn', resource.title_kn)
+        resource.title_hi = request.form.get('title_hi', resource.title_hi)
+        resource.description = request.form.get('description', resource.description)
+        resource.description_kn = request.form.get('description_kn', resource.description_kn)
+        resource.description_hi = request.form.get('description_hi', resource.description_hi)
+        resource.content = request.form.get('content', resource.content)
+        resource.content_kn = request.form.get('content_kn', resource.content_kn)
+        resource.content_hi = request.form.get('content_hi', resource.content_hi)
+        resource.url = request.form.get('url', resource.url)
+        resource.url_kn = request.form.get('url_kn', resource.url_kn)
+        resource.url_hi = request.form.get('url_hi', resource.url_hi)
+
+        try:
+            db.session.commit()
+            flash(f"Study notes for '{resource.topic.name}' have been updated successfully.", "success")
+            return redirect(url_for('faculty_edit_notes', resource_id=resource.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to update study notes: {str(e)}", "error")
+
+    all_topics = Topic.query.all()
+    return render_template('faculty_edit_notes.html', resource=resource, is_new=False, all_topics=all_topics)
+
+
+@app.route('/faculty/notes/create', methods=['GET', 'POST'])
+@faculty_required
+def faculty_create_notes():
+    all_topics = Topic.query.all()
+    if request.method == 'POST':
+        topic_id = request.form.get('topic_id', type=int)
+        topic = db.session.get(Topic, topic_id)
+        if not topic:
+            flash("Invalid topic selected for study notes.", "error")
+            return redirect(url_for('faculty_create_notes'))
+
+        new_resource = Resource(
+            topic_id=topic_id,
+            type='notes',
+            difficulty=request.form.get('difficulty', 'medium'),
+            target_level=request.form.get('target_level', 'medium'),
+            title=request.form.get('title', f"Study Notes: {topic.name}"),
+            title_kn=request.form.get('title_kn', f"ಅಧ್ಯಯನ ಟಿಪ್ಪಣಿಗಳು: {topic.name}"),
+            title_hi=request.form.get('title_hi', f"अध्ययन नोट्स: {topic.name}"),
+            description=request.form.get('description', ''),
+            description_kn=request.form.get('description_kn', ''),
+            description_hi=request.form.get('description_hi', ''),
+            content=request.form.get('content', ''),
+            content_kn=request.form.get('content_kn', ''),
+            content_hi=request.form.get('content_hi', ''),
+            url=request.form.get('url', ''),
+            url_kn=request.form.get('url_kn', ''),
+            url_hi=request.form.get('url_hi', '')
+        )
+
+        try:
+            db.session.add(new_resource)
+            db.session.commit()
+            flash(f"New study notes for '{topic.name}' created successfully.", "success")
+            return redirect(url_for('faculty_edit_notes', resource_id=new_resource.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Failed to create study notes: {str(e)}", "error")
+
+    return render_template('faculty_edit_notes.html', resource=None, is_new=True, all_topics=all_topics)
 
 
 @app.route('/favicon.ico')
