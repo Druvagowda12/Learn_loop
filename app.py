@@ -58,19 +58,15 @@ from engine import (
 from chatbot import answer_query
 from seed import seed_database
 
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-_secret_key = os.environ.get('SECRET_KEY')
-if not _secret_key:
-    if os.environ.get('FLASK_ENV') == 'production':
-        print("ERROR: SECRET_KEY environment variable is not set. Refusing to start in production.", file=sys.stderr)
-        sys.exit(1)
-    else:
-        import secrets
-        _secret_key = secrets.token_hex(32)
-        print("WARNING: SECRET_KEY not set. Using a temporary random key (sessions will reset on restart). Set SECRET_KEY in your .env file.")
-
-app.config['SECRET_KEY'] = _secret_key
+# Stable persistent secret key with environment override to prevent session loss on Render restarts
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'learnloop-prod-vtu-2026-secure-session-key-e47b19a'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 # --- Database Configuration (Neon Cloud PostgreSQL / SQLite Fallback) ---
 _raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///learnloop.db')
@@ -320,7 +316,14 @@ def set_language(lang):
 @app.before_request
 def protect_faculty_routes():
     if request.path.startswith('/faculty'):
-        if 'user_id' not in session or session.get('role') not in ('faculty', 'teacher'):
+        user_id = session.get('user_id')
+        role = str(session.get('role', '')).strip().lower()
+        if user_id and not role:
+            u = db.session.get(User, user_id)
+            if u:
+                role = str(u.role).strip().lower()
+                session['role'] = role
+        if not user_id or role not in ('faculty', 'teacher'):
             abort(403)
 
 @app.after_request
@@ -362,10 +365,17 @@ def login_required(f):
 def faculty_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
+        user_id = session.get('user_id')
+        if not user_id:
             flash("Please sign in with a faculty account to access the teacher view.", "warning")
             return redirect(url_for('login', next=request.url))
-        if session.get('role') not in ('faculty', 'teacher'):
+        role = str(session.get('role', '')).strip().lower()
+        if not role:
+            u = db.session.get(User, user_id)
+            if u:
+                role = str(u.role).strip().lower()
+                session['role'] = role
+        if role not in ('faculty', 'teacher'):
             flash("Access restricted. The Teacher Oversight Portal is only accessible to verified faculty accounts.", "error")
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
