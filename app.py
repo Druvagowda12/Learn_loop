@@ -35,7 +35,7 @@ def _safe_neon_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
 socket.getaddrinfo = _safe_neon_getaddrinfo
 
 from dotenv import load_dotenv
-load_dotenv()  # Load variables from .env into os.environ (no-op if file absent)
+load_dotenv(override=True)  # Load variables from .env into os.environ with override
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -45,7 +45,8 @@ from flask import (
 from models import (
     db, User, Subject, Topic, Question,
     Attempt, AttemptAnswer, TopicProgress,
-    Resource, ResourceView, ChatLog, utc_now
+    Resource, ResourceView, ChatLog, utc_now,
+    QuizAttempt, LessonProgress
 )
 
 from engine import (
@@ -315,6 +316,12 @@ def set_language(lang):
     resp.set_cookie('learnloop_lang', lang, max_age=30*86400, path='/', samesite='Lax')
     return resp
 
+@app.before_request
+def protect_faculty_routes():
+    if request.path.startswith('/faculty'):
+        if 'user_id' not in session or session.get('role') not in ('faculty', 'teacher'):
+            abort(403)
+
 @app.after_request
 def set_language_cookie(response):
     lang = get_current_lang()
@@ -332,9 +339,12 @@ def api_translations(lang):
 
 # Ensure database tables and initial seed data exist
 with app.app_context():
-    db.create_all()
-    if not Subject.query.first():
-        seed_database(app)
+    try:
+        db.create_all()
+        if not Subject.query.first():
+            seed_database(app)
+    except Exception as e:
+        print(f"Database initialization notice: {e}", file=sys.stderr)
 
 # -----------------------------------------------------------------------------
 # Auth Helpers & Decorators
@@ -348,17 +358,21 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def teacher_required(f):
+def faculty_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash("Please sign in with a faculty account to access the teacher view.", "warning")
             return redirect(url_for('login', next=request.url))
-        if session.get('role') != 'teacher':
+        if session.get('role') not in ('faculty', 'teacher'):
             flash("Access restricted. The Teacher Oversight Portal is only accessible to verified faculty accounts.", "error")
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
     return decorated_function
+
+teacher_required = faculty_required
+
+
 
 @app.context_processor
 def inject_user_state():
@@ -393,18 +407,19 @@ def process_login():
             session['preferred_language'] = user.preferred_language
             flash(f"Welcome back, {user.name}!", "success")
 
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            if user.role == 'teacher':
+            if user.role in ('teacher', 'faculty'):
                 return redirect(url_for('teacher_dashboard'))
+
+            next_page = request.args.get('next')
+            if next_page and not next_page.startswith('/teacher') and not next_page.startswith('/faculty'):
+                return redirect(next_page)
             return redirect(url_for('dashboard'))
         else:
             flash("Invalid email or password. Please verify your credentials or choose a test demo account.", "error")
 
     # If already logged in and visiting via GET, redirect to their dashboard
     if 'user_id' in session and request.method == 'GET':
-        if session.get('role') == 'teacher':
+        if session.get('role') in ('teacher', 'faculty'):
             return redirect(url_for('teacher_dashboard'))
         return redirect(url_for('dashboard'))
 
@@ -451,10 +466,23 @@ def register():
             flash("An account with that email already exists. Please sign in.", "warning")
             return redirect(url_for('login'))
 
+        # Determine role based on registration form (default student)
+        selected_role = request.form.get('role', 'student').strip().lower()
+        if selected_role in ('faculty', 'teacher'):
+            # Verify faculty access code
+            access_code = request.form.get('faculty_access_code', '').strip()
+            raw_expected = os.getenv('FACULTY_ACCESS_CODE', '')
+            expected_code = raw_expected.strip().strip('"').strip("'")
+            if not expected_code or access_code != expected_code:
+                flash('Invalid Faculty Access Code. Registration denied.', 'error')
+                return render_template('register.html'), 403
+            role_to_set = 'faculty'  # internal role name used in app
+        else:
+            role_to_set = 'student'
         new_user = User(
             name=name,
             email=email,
-            role='student',
+            role=role_to_set,
             preferred_language=pref_lang,
             is_synthetic=False
         )
@@ -469,6 +497,8 @@ def register():
         session['preferred_language'] = new_user.preferred_language
 
         flash("Registration successful! Welcome to Learnloop.", "success")
+        if new_user.role in ('teacher', 'faculty'):
+            return redirect(url_for('teacher_dashboard'))
         return redirect(url_for('topics'))
 
     return render_template('register.html')
@@ -766,6 +796,18 @@ def submit_quiz(topic_id):
     db.session.add(attempt)
     db.session.flush()
 
+    # Also record into PostgreSQL quiz_attempts table for unified LMS audit
+    quiz_attempt = QuizAttempt(
+        user_id=user_id,
+        subject=topic.subject.name if topic.subject else "Engineering",
+        topic=topic.name,
+        difficulty=difficulty_mix,
+        score_percent=score_pct,
+        weak_topics=", ".join(sorted(missed_subtopics)) if missed_subtopics else None,
+        created_at=utc_now()
+    )
+    db.session.add(quiz_attempt)
+
     # 2. Record Attempt Answers
     for ans in detailed_answers:
         att_ans = AttemptAnswer(
@@ -872,8 +914,8 @@ def view_resource(resource_id):
     if not resource:
         abort(404)
 
-    # Record resource view if student is logged in
-    if 'user_id' in session:
+    # Record resource view only if student is logged in (faculty inspects read-only)
+    if 'user_id' in session and session.get('role') == 'student':
         user_id = session['user_id']
         rv = ResourceView(user_id=user_id, resource_id=resource.id, viewed_at=utc_now())
         db.session.add(rv)
@@ -894,6 +936,8 @@ def view_resource(resource_id):
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    if session.get('role') in ('teacher', 'faculty'):
+        return redirect(url_for('teacher_dashboard'))
     user_id = session['user_id']
     user = db.session.get(User, user_id)
 
@@ -961,7 +1005,8 @@ def dashboard():
 # Teacher Oversight Portal (Read-Only)
 # -----------------------------------------------------------------------------
 @app.route('/teacher')
-@teacher_required
+@app.route('/faculty')
+@faculty_required
 def teacher_dashboard():
     # 1. Topic class averages and low-mastery counts
     topics = Topic.query.all()
@@ -984,18 +1029,50 @@ def teacher_dashboard():
             'needs_attention': (low_count >= 1) or (avg_pct is not None and avg_pct < 50.0)
         })
 
-    # 2. Latest scores per student
+    # 2. Latest scores, weak topics, and subject breakdown per student
     students = User.query.filter_by(role='student').all()
     student_summaries = []
     for s in students:
         s_attempts = Attempt.query.filter_by(user_id=s.id).order_by(Attempt.taken_at.desc()).all()
         s_avg = round(sum(a.score_pct for a in s_attempts) / len(s_attempts), 1) if s_attempts else 0.0
         s_last = s_attempts[0] if s_attempts else None
+
+        # Gather weak topics across subjects
+        low_progress = TopicProgress.query.filter_by(user_id=s.id, mastery_level='Low').all()
+        weak_topics = []
+        for lp in low_progress:
+            if lp.topic and lp.topic.name not in weak_topics:
+                weak_topics.append(lp.topic.name)
+
+        # Also retrieve any weak_topics from QuizAttempt
+        qa_records = QuizAttempt.query.filter_by(user_id=s.id).order_by(QuizAttempt.created_at.desc()).all()
+        for qa in qa_records:
+            if qa.weak_topics:
+                for wt in [w.strip() for w in qa.weak_topics.split(',') if w.strip()]:
+                    if wt not in weak_topics:
+                        weak_topics.append(wt)
+
+        # Subject-wise attempts and performance
+        subject_scores = {}
+        for att in s_attempts:
+            if att.topic and att.topic.subject:
+                sub_name = att.topic.subject.name
+                if sub_name not in subject_scores:
+                    subject_scores[sub_name] = []
+                subject_scores[sub_name].append(att.score_pct)
+
+        subject_summary = []
+        for sub_name, scores in subject_scores.items():
+            mean_sub = round(sum(scores) / len(scores), 1)
+            subject_summary.append(f"{sub_name}: {mean_sub}% ({len(scores)})")
+
         student_summaries.append({
             'student': s,
-            'attempts_count': len(s_attempts),
+            'attempts_count': len(s_attempts) + len(qa_records),
             'avg_score': s_avg,
-            'last_attempt': s_last
+            'last_attempt': s_last,
+            'weak_topics': weak_topics,
+            'subject_summary': subject_summary
         })
 
     return render_template(
@@ -1006,17 +1083,20 @@ def teacher_dashboard():
 
 
 @app.route('/teacher/clear-student-data', methods=['POST'])
-@teacher_required
+@app.route('/faculty/clear-student-data', methods=['POST'])
+@faculty_required
 def clear_student_data():
     action = request.form.get('action', 'clear_all')
     student_id = request.form.get('student_id', type=int)
 
     if action == 'clear_all':
-        # Clear all attempts, attempt answers, topic progress, and resource views
+        # Clear all attempts, attempt answers, topic progress, resource views, and LMS tracking
         AttemptAnswer.query.delete()
         Attempt.query.delete()
         TopicProgress.query.delete()
         ResourceView.query.delete()
+        QuizAttempt.query.delete()
+        LessonProgress.query.delete()
         db.session.commit()
         flash("All student diagnostic quiz records, attempt histories, and progress data have been cleared successfully.", "success")
         return redirect(url_for('teacher_dashboard'))
@@ -1029,6 +1109,8 @@ def clear_student_data():
                 db.session.delete(att)
             TopicProgress.query.filter_by(user_id=student.id).delete()
             ResourceView.query.filter_by(user_id=student.id).delete()
+            QuizAttempt.query.filter_by(user_id=student.id).delete()
+            LessonProgress.query.filter_by(user_id=student.id).delete()
             db.session.commit()
             flash(f"Progress and attempt records for student '{student.name}' have been cleared.", "success")
         else:
@@ -1039,6 +1121,8 @@ def clear_student_data():
         student = db.session.get(User, student_id)
         if student and student.role == 'student':
             name = student.name
+            QuizAttempt.query.filter_by(user_id=student.id).delete()
+            LessonProgress.query.filter_by(user_id=student.id).delete()
             db.session.delete(student)
             db.session.commit()
             flash(f"Student account '{name}' and all associated records have been removed successfully.", "success")

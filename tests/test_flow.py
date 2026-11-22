@@ -12,6 +12,7 @@ Simulates the entire user flow:
 9. Multilingual chatbot API in EN, HI, KN, and fallback
 """
 
+import os
 import pytest
 from app import app, db
 from models import User, Topic, Question, Attempt, TopicProgress, Resource, ResourceView
@@ -26,6 +27,9 @@ def test_landing_page(client):
     assert b"Sign In to Learnloop" in res.data or b"Sign In" in res.data
     assert b"Test Demo Accounts" in res.data
     assert b"student1@demo.test" in res.data
+    # Mobile responsive navigation checks
+    assert b"mobile-menu-btn" in res.data
+    assert b"mobile-nav-drawer" in res.data
 
 
 def test_404_error_page(client):
@@ -150,7 +154,7 @@ def test_dashboard_and_charts(client):
 
 
 def test_role_based_access_control(client):
-    # Student cannot access /teacher
+    # Student cannot access /teacher or /faculty
     client.post('/login', data={
         'email': 'student1@demo.test',
         'password': 'learnloop123'
@@ -159,17 +163,61 @@ def test_role_based_access_control(client):
     assert res.status_code == 200
     assert b"Access restricted" in res.data
 
-    # Logout and login as teacher
+    fac_res = client.get('/faculty')
+    assert fac_res.status_code == 403
+
+    # Logout
     client.get('/logout')
-    client.post('/login', data={
-        'email': 'teacher@demo.test',
-        'password': 'learnloop123'
+
+    # Faculty registration rejected with invalid code
+    bad_reg = client.post('/register', data={
+        'name': 'Prof Fake',
+        'email': 'proffake@vtu.ac.in',
+        'password': 'password123',
+        'preferred_language': 'en',
+        'consent': 'on',
+        'role': 'faculty',
+        'faculty_access_code': 'WRONG_CODE'
     })
+    assert bad_reg.status_code == 403
+
+    valid_code = (os.environ.get('FACULTY_ACCESS_CODE') or 'GECM@123').strip().strip('"').strip("'")
+    good_reg = client.post('/register', data={
+        'name': 'Prof Valid',
+        'email': 'profvalid@vtu.ac.in',
+        'password': 'password123',
+        'preferred_language': 'en',
+        'consent': 'on',
+        'role': 'faculty',
+        'faculty_access_code': valid_code
+    }, follow_redirects=True)
+    assert good_reg.status_code == 200
+    assert b"Module Intervention Radar" in good_reg.data
+
+    # Logged-in faculty accessing /dashboard is redirected to faculty portal
+    dash_res = client.get('/dashboard', follow_redirects=True)
+    assert dash_res.status_code == 200
+    assert b"Module Intervention Radar" in dash_res.data
+
+    # Logged-in faculty can access /faculty and /teacher
     teacher_res = client.get('/teacher')
     assert teacher_res.status_code == 200
     assert b"Faculty Read-Only Mode" in teacher_res.data
     assert b"Responsible Educational AI Safeguard" in teacher_res.data
     assert b"Module Intervention Radar" in teacher_res.data
+
+    fac_ok = client.get('/faculty')
+    assert fac_ok.status_code == 200
+
+    # Logout and re-login as faculty: confirms direct redirect to faculty portal
+    client.get('/logout')
+    login_fac = client.post('/login', data={
+        'email': 'profvalid@vtu.ac.in',
+        'password': 'password123'
+    }, follow_redirects=True)
+    assert login_fac.status_code == 200
+    assert b"Module Intervention Radar" in login_fac.data
+
 
 
 def test_chatbot_multilingual_api(client):

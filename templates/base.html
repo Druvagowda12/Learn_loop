@@ -83,46 +83,134 @@
             {{ _('nav_resources') }}
           </a>
           {% if session.get('user_id') %}
-            <a href="{{ url_for('dashboard') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {% if request.endpoint == 'dashboard' %}text-[#e8a33d] bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}" data-i18n="nav_dashboard">
-              {{ _('nav_dashboard') }}
-            </a>
-            {% if session.get('role') == 'teacher' %}
+            {% if session.get('role') in ['teacher', 'faculty'] %}
               <a href="{{ url_for('teacher_dashboard') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {% if request.endpoint == 'teacher_dashboard' %}text-[#e8a33d] bg-white/5{% else %}text-emerald-300 hover:text-white hover:bg-white/5{% endif %}" data-i18n="nav_teacher">
                 {{ _('nav_teacher') }}
+              </a>
+            {% else %}
+              <a href="{{ url_for('dashboard') }}" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {% if request.endpoint == 'dashboard' %}text-[#e8a33d] bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}" data-i18n="nav_dashboard">
+                {{ _('nav_dashboard') }}
               </a>
             {% endif %}
           {% endif %}
         </nav>
 
-        <!-- Right Side: Language Switcher & Auth Controls -->
-        <div class="flex items-center gap-3">
+        <!-- Right Side: Language Switcher, Auth Controls & Hamburger Toggle -->
+        <div class="flex items-center gap-2 sm:gap-3">
           <!-- Smooth Language Switcher -->
           <div class="flex items-center bg-white/10 rounded-xl p-1 border border-white/15 text-xs shadow-inner">
-            <button type="button" onclick="switchLanguage('en')" class="lang-btn px-2.5 py-1 rounded-lg transition-all font-semibold {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="en">EN</button>
-            <button type="button" onclick="switchLanguage('kn')" class="lang-btn px-2.5 py-1 rounded-lg transition-all font-semibold {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="kn">ಕನ್ನಡ</button>
-            <button type="button" onclick="switchLanguage('hi')" class="lang-btn px-2.5 py-1 rounded-lg transition-all font-semibold {% if user_lang == 'hi' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="hi">हिन्दी</button>
+            <button type="button" onclick="switchLanguage('en')" class="lang-btn px-2 sm:px-2.5 py-1 rounded-lg transition-all font-semibold {% if (user_lang or 'en') == 'en' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="en">EN</button>
+            <button type="button" onclick="switchLanguage('kn')" class="lang-btn px-2 sm:px-2.5 py-1 rounded-lg transition-all font-semibold {% if user_lang == 'kn' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="kn">ಕನ್ನಡ</button>
+            <button type="button" onclick="switchLanguage('hi')" class="lang-btn px-2 sm:px-2.5 py-1 rounded-lg transition-all font-semibold {% if user_lang == 'hi' %}bg-[#e8a33d] text-[#10222c] shadow-sm{% else %}text-gray-300 hover:text-white hover:bg-white/10{% endif %}" data-lang="hi">हिन्दी</button>
           </div>
 
           {% if session.get('user_id') %}
             <div class="hidden sm:flex items-center gap-2 pl-3 border-l border-white/10 text-xs text-gray-300">
               <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot-green"></span>
-              <span class="font-medium text-white">{{ session.get('user_name', 'Student') }}</span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase {% if session.get('role') == 'teacher' %}bg-amber-900/60 text-amber-300 border border-amber-500/40{% else %}bg-emerald-900/60 text-emerald-300 border border-emerald-500/40{% endif %}">
+              <span class="font-medium text-white truncate max-w-[120px]">{{ session.get('user_name', 'Student') }}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase {% if session.get('role') in ['teacher', 'faculty'] %}bg-amber-900/60 text-amber-300 border border-amber-500/40{% else %}bg-emerald-900/60 text-emerald-300 border border-emerald-500/40{% endif %}">
                 {{ session.get('role') }}
               </span>
             </div>
-            <a href="{{ url_for('logout') }}" class="text-xs text-gray-300 hover:text-white px-3 py-1.5 rounded-lg border border-white/20 hover:border-white/40 transition-colors" data-i18n="sign_out">
+            <a href="{{ url_for('logout') }}" class="hidden sm:inline-flex text-xs text-gray-300 hover:text-white px-3 py-1.5 rounded-lg border border-white/20 hover:border-white/40 transition-colors" data-i18n="sign_out">
               {{ _('sign_out') }}
             </a>
           {% else %}
-            <a href="{{ url_for('login') }}" class="text-sm font-medium text-gray-200 hover:text-white px-3 py-1.5 rounded-lg transition-colors" data-i18n="sign_in">
+            <a href="{{ url_for('login') }}" class="hidden sm:inline-flex text-sm font-medium text-gray-200 hover:text-white px-3 py-1.5 rounded-lg transition-colors" data-i18n="sign_in">
               {{ _('sign_in') }}
             </a>
-            <a href="{{ url_for('register') }}" class="btn-primary text-xs tracking-wider uppercase font-bold px-4 py-2" data-i18n="register">
+            <a href="{{ url_for('register') }}" class="hidden sm:inline-flex btn-primary text-xs tracking-wider uppercase font-bold px-4 py-2" data-i18n="register">
               {{ _('register') }}
             </a>
           {% endif %}
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <button type="button" id="mobile-menu-btn" onclick="toggleMobileNav()"
+            class="md:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#e8a33d] transition-colors"
+            aria-label="Toggle navigation menu" aria-expanded="false">
+            <svg id="hamburger-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
+
+      </div>
+
+      <!-- Mobile Navigation Drawer / Dropdown -->
+      <div id="mobile-nav-drawer" class="hidden md:hidden border-t border-white/10 py-3 space-y-1.5 animate-fade-down">
+        {% if not session.get('user_id') %}
+          <a href="{{ url_for('index') }}"
+            class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors {% if request.endpoint in ['index', 'login'] %}text-[#e8a33d] bg-white/10 font-bold{% else %}text-gray-200 hover:text-white hover:bg-white/5{% endif %}"
+            data-i18n="sign_in">
+            <span>{{ _('sign_in') }}</span>
+            <span class="text-xs text-gray-400">→</span>
+          </a>
+        {% endif %}
+
+        <a href="{{ url_for('topics') }}"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors {% if request.endpoint == 'topics' %}text-[#e8a33d] bg-white/10 font-bold{% else %}text-gray-200 hover:text-white hover:bg-white/5{% endif %}"
+          data-i18n="nav_topics">
+          <span>{{ _('nav_topics') }}</span>
+          <span class="text-xs text-gray-400">⚡</span>
+        </a>
+
+        <a href="{{ url_for('resources') }}"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors {% if request.endpoint == 'resources' %}text-[#e8a33d] bg-white/10 font-bold{% else %}text-gray-200 hover:text-white hover:bg-white/5{% endif %}"
+          data-i18n="nav_resources">
+          <span>{{ _('nav_resources') }}</span>
+          <span class="text-xs text-gray-400">📚</span>
+        </a>
+
+        {% if session.get('user_id') %}
+          {% if session.get('role') in ['teacher', 'faculty'] %}
+            <a href="{{ url_for('teacher_dashboard') }}"
+              class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors {% if request.endpoint == 'teacher_dashboard' %}text-[#e8a33d] bg-white/10 font-bold{% else %}text-amber-300 hover:text-white hover:bg-white/5{% endif %}"
+              data-i18n="nav_teacher">
+              <span>{{ _('nav_teacher') }}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Faculty</span>
+            </a>
+          {% else %}
+            <a href="{{ url_for('dashboard') }}"
+              class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors {% if request.endpoint == 'dashboard' %}text-[#e8a33d] bg-white/10 font-bold{% else %}text-emerald-300 hover:text-white hover:bg-white/5{% endif %}"
+              data-i18n="nav_dashboard">
+              <span>{{ _('nav_dashboard') }}</span>
+              <span class="text-xs text-gray-400">📊</span>
+            </a>
+          {% endif %}
+
+          <!-- Mobile User Info & Logout Bar -->
+          <div class="pt-3 mt-2 border-t border-white/10 flex items-center justify-between px-3.5">
+            <div class="flex items-center gap-2 text-xs text-gray-300">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot-green"></span>
+              <span class="font-medium text-white truncate max-w-[140px]">{{ session.get('user_name', 'Student') }}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase {% if session.get('role') in ['teacher', 'faculty'] %}bg-amber-900/60 text-amber-300 border border-amber-500/40{% else %}bg-emerald-900/60 text-emerald-300 border border-emerald-500/40{% endif %}">
+                {{ session.get('role') }}
+              </span>
+            </div>
+            <a href="{{ url_for('logout') }}"
+              class="text-xs text-red-300 hover:text-red-100 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-900/20 hover:bg-red-900/40 transition-colors font-medium"
+              data-i18n="sign_out">
+              {{ _('sign_out') }}
+            </a>
+          </div>
+        {% else %}
+          <div class="pt-3 mt-2 border-t border-white/10 grid grid-cols-2 gap-2 px-1">
+            <a href="{{ url_for('login') }}"
+              class="text-center text-xs font-semibold text-gray-200 hover:text-white px-3 py-2.5 rounded-xl border border-white/20 hover:bg-white/10 transition-colors"
+              data-i18n="sign_in">
+              {{ _('sign_in') }}
+            </a>
+            <a href="{{ url_for('register') }}"
+              class="text-center btn-primary text-xs tracking-wider uppercase font-bold px-3 py-2.5 rounded-xl"
+              data-i18n="register">
+              {{ _('register') }}
+            </a>
+          </div>
+        {% endif %}
+      </div>
 
       </div>
     </div>
@@ -190,7 +278,7 @@
             <li><a href="{{ url_for('topics') }}" class="hover:text-amber-400 transition-colors">Adaptive Quizzes</a></li>
             <li><a href="{{ url_for('resources') }}" class="hover:text-amber-400 transition-colors">Resource Repository</a></li>
             <li><a href="{{ url_for('dashboard') }}" class="hover:text-amber-400 transition-colors">Student Analytics</a></li>
-            <li><a href="{{ url_for('teacher_dashboard') }}" class="hover:text-amber-400 transition-colors">Teacher Oversight</a></li>
+            <li><a href="{{ url_for('teacher_dashboard') }}" class="hover:text-amber-400 transition-colors">Faculty Oversight</a></li>
           </ul>
         </div>
 

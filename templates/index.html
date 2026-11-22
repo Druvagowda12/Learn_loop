@@ -30,7 +30,7 @@
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-          {% if current_user.role == 'teacher' %}
+          {% if current_user.role in ['teacher', 'faculty'] %}
             <a href="{{ url_for('teacher_dashboard') }}" class="btn-primary text-sm font-bold px-6 py-3 shadow-md" data-i18n="go_to_teacher">
               {{ _('go_to_teacher') }}
             </a>

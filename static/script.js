@@ -280,6 +280,26 @@ function applyTranslations(dict) {
   if (htmlEl) htmlEl.setAttribute('lang', dict['lang'] || 'en');
 }
 
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-nav-drawer');
+  const hamIcon = document.getElementById('hamburger-icon');
+  const closeIcon = document.getElementById('close-icon');
+  const btn = document.getElementById('mobile-menu-btn');
+  if (!drawer) return;
+  const isHidden = drawer.classList.contains('hidden');
+  if (isHidden) {
+    drawer.classList.remove('hidden');
+    if (hamIcon) hamIcon.classList.add('hidden');
+    if (closeIcon) closeIcon.classList.remove('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  } else {
+    drawer.classList.add('hidden');
+    if (hamIcon) hamIcon.classList.remove('hidden');
+    if (closeIcon) closeIcon.classList.add('hidden');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+}
+
 function switchLanguage(lang) {
   if (!['en', 'hi', 'kn'].includes(lang)) return;
 
@@ -327,12 +347,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize AI badge state
-  updateAiBadge(!!getUserApiKey());
+  // Safely guard AI badge state if custom handler is present
+  if (typeof updateAiBadge === 'function') {
+    try {
+      const hasKey = typeof getUserApiKey === 'function' ? !!getUserApiKey() : false;
+      updateAiBadge(hasKey);
+    } catch (e) { }
+  }
 
   // Trigger subtle shake animation on error alerts
   const errorAlerts = document.querySelectorAll('[role="alert"].bg-red-50');
   errorAlerts.forEach(alert => {
     alert.classList.add('animate-shake');
+  });
+
+  // Auto-close mobile navigation drawer on viewport expansion
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      const hamIcon = document.getElementById('hamburger-icon');
+      const closeIcon = document.getElementById('close-icon');
+      const btn = document.getElementById('mobile-menu-btn');
+      if (drawer && !drawer.classList.contains('hidden')) {
+        drawer.classList.add('hidden');
+        if (hamIcon) hamIcon.classList.remove('hidden');
+        if (closeIcon) closeIcon.classList.add('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+    }
   });
 });

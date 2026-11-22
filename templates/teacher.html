@@ -181,6 +181,20 @@
                 {% else %}
                 <span class="text-gray-400 italic" data-i18n="no_attempts">{{ _('no_attempts') }}</span>
                 {% endif %}
+                {% if s.weak_topics %}
+                <div class="mt-1 flex flex-wrap gap-1">
+                  {% for wt in s.weak_topics %}
+                  <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                    Needs Attention: {{ wt|localize }}
+                  </span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+                {% if s.subject_summary %}
+                <div class="mt-1 text-[10px] text-gray-500 font-mono">
+                  {{ s.subject_summary|join(' • ') }}
+                </div>
+                {% endif %}
               </td>
               <td class="p-3.5 uppercase font-mono text-[11px] text-gray-600">
                 {{ s.student.preferred_language }}

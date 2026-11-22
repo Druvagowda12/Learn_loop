@@ -302,6 +302,87 @@ class ResourceView(BaseModel):
     resource_id = db.Column(db.Integer, db.ForeignKey('resources.id'), nullable=False)
     viewed_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
+class QuizAttempt(BaseModel):
+    __tablename__ = 'quiz_attempts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subject = db.Column(db.String(120), nullable=False)
+    topic = db.Column(db.String(150), nullable=False)
+    difficulty = db.Column(db.String(10), nullable=False)
+    score_percent = db.Column(db.Float, nullable=False)
+    weak_topics = db.Column(db.Text, nullable=True)  # JSON string or comma list
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'subject': self.subject,
+            'topic': self.topic,
+            'difficulty': self.difficulty,
+            'score_percent': self.score_percent,
+            'weak_topics': self.weak_topics,
+            'created_at': self.created_at.isoformat()
+        }
+
+class Course(BaseModel):
+    __tablename__ = 'courses'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    modules = db.relationship('Module', backref='course', lazy=True, cascade='all, delete-orphan')
+
+class Module(BaseModel):
+    __tablename__ = 'modules'
+
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    lessons = db.relationship('Lesson', backref='module', lazy=True, cascade='all, delete-orphan')
+
+class Lesson(BaseModel):
+    __tablename__ = 'lessons'
+
+    id = db.Column(db.Integer, primary_key=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('modules.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    notes_en = db.Column(db.Text, nullable=True)
+    notes_kn = db.Column(db.Text, nullable=True)
+    notes_hi = db.Column(db.Text, nullable=True)
+    video_url_en = db.Column(db.String(500), nullable=True)
+    video_url_kn = db.Column(db.String(500), nullable=True)
+    video_url_hi = db.Column(db.String(500), nullable=True)
+    pdf_url = db.Column(db.String(500), nullable=True)
+    # optional order field
+    position = db.Column(db.Integer, nullable=True)
+
+class LessonProgress(BaseModel):
+    __tablename__ = 'lesson_progress'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'), nullable=False)
+    completed = db.Column(db.Boolean, default=False, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    # relationship backrefs
+    user = db.relationship('User', backref='lesson_progress')
+    lesson = db.relationship('Lesson', backref='progress_records')
+
+class Certificate(BaseModel):
+    __tablename__ = 'certificates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    issued_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    cert_uuid = db.Column(db.String(36), unique=True, nullable=False)
+    user = db.relationship('User', backref='certificates')
+    course = db.relationship('Course', backref='certificates')
+
+# ---------- End New LMS Models ----------
 
 class ChatLog(BaseModel):
     __tablename__ = 'chat_logs'

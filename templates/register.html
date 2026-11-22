@@ -52,6 +52,28 @@
       </div>
 
       <div>
+        <label for="role" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1">
+          Account Role / ಪಾತ್ರ / भूमिका
+        </label>
+        <select id="role" name="role" onchange="toggleFacultyCode(this.value)"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+          <option value="student">Student (ವಿದ್ಯಾರ್ಥಿ / छात्र)</option>
+          <option value="faculty">Faculty (ಅಧ್ಯಾಪಕರು / संकाय)</option>
+        </select>
+      </div>
+
+      <div id="faculty-code-container" class="hidden">
+        <label for="faculty_access_code"
+          class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1">
+          Faculty Access Code <span class="text-red-500">*</span>
+        </label>
+        <input type="password" id="faculty_access_code" name="faculty_access_code"
+          placeholder="Enter institutional faculty code"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-[#e2dacd] bg-white focus:outline-none focus:ring-2 focus:ring-[#1a6b5f] focus:border-transparent text-sm">
+        <p class="text-[11px] text-gray-500 mt-1">Required to verify authorized VTU faculty registration.</p>
+      </div>
+
+      <div>
         <label for="password" class="block text-xs font-semibold text-[#1d2b33] uppercase tracking-wider mb-1"
           data-i18n="password">
           {{ _('password') }}
@@ -96,4 +118,20 @@
   </div>
 
 </div>
+
+<script>
+  function toggleFacultyCode(role) {
+    const container = document.getElementById('faculty-code-container');
+    const input = document.getElementById('faculty_access_code');
+    if (role === 'faculty') {
+      container.classList.remove('hidden');
+      input.setAttribute('required', 'required');
+      input.focus();
+    } else {
+      container.classList.add('hidden');
+      input.removeAttribute('required');
+      input.value = '';
+    }
+  }
+</script>
 {% endblock %}
